@@ -54,10 +54,10 @@ int main(int argc, const char** argv)
 
     namedWindow("image", CV_WINDOW_NORMAL);
     namedWindow("foreground mask", CV_WINDOW_NORMAL);
-//    namedWindow("foreground image", CV_WINDOW_NORMAL);
- //   namedWindow("mean background image", CV_WINDOW_NORMAL);
+    namedWindow("foreground image", CV_WINDOW_NORMAL);
+    namedWindow("mean background image", CV_WINDOW_NORMAL);
 
-    BackgroundSubtractorMOG2 bg_model(200, 25.0,false);
+    BackgroundSubtractorMOG2 bg_model(500, 100.0,true);
     
     
 /*    SimpleBlobDetector::Params blobParams;
@@ -109,6 +109,7 @@ int main(int argc, const char** argv)
         temp.copyTo(fgmask);
         
         //detect movement.  Update bgimage when we have movement or every n frames
+        /*
         if (fgmask_old.empty()){
             fgmask_old.create(fgmask.size(),fgmask.type());
         }
@@ -120,7 +121,7 @@ int main(int argc, const char** argv)
             frames++;
         }
         fgmask.copyTo(fgmask_old);
-        
+        */
     //    blobs.detect(fgmask,blobKeypoints);
     //    drawKeypoints(img,blobKeypoints,img);        
         /*
@@ -142,19 +143,19 @@ int main(int argc, const char** argv)
             circle(fgimg,centers[contour],2,Scalar(0,0,255),-1);
         }
     
-        /*
-        img.copyTo(fgimg, fgmask);
+        
+        //img.copyTo(fgimg, fgmask);
         
         Mat bgimg;
         bg_model.getBackgroundImage(bgimg);
-        */
         imshow("image", fgimg);
         imshow("foreground mask", fgmask);
-        /*
+        
         imshow("foreground image", fgimg);
+        
         if(!bgimg.empty())
           imshow("mean background image", bgimg );
-        */
+        
         char k = (char)waitKey(30);
         if( k == 27 ) break;
         if( k == ' ' )
