@@ -5,10 +5,6 @@
 void drawMatchesRelative(const vector<KeyPoint>& train, const vector<KeyPoint>& query,
       vector<cv::DMatch>& matches, Mat& img, const vector<unsigned char>& mask = vector<unsigned char> ());
       
-void refineH(vector<Point2f>& train, vector<Point2f>& query,const vector<unsigned char>& mask);
-
-void resetH(Mat&H);
-
 void keypoints2points(const vector<KeyPoint>& in, vector<Point2f>& out);
 
 void points2keypoints(const vector<Point2f>& in, vector<KeyPoint>& out);

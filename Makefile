@@ -4,6 +4,7 @@ CPPLINKERFLAGS=`pkg-config --cflags --libs opencv`
 #objects_bgfg=bgfg_segm.o 
 objects_dancer=dancer_segm.o 
 objects_keypoint=Keypoints.o Keypoint_Tracker.o
+objects=$(objects_dancer) $(objects_keypoint)
 all : dancer_segm Keypoint_Tracker 
 
 #bgfg_segm:$(objects_bgfg)
@@ -20,5 +21,5 @@ Keypoint_Tracker:$(objects_keypoint)
 .PHONY : clean
 
 clean :
-	rm dancer_segm $(objects)
+	rm dancer_segm Keypoint_Tracker $(objects)
                   
