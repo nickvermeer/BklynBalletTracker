@@ -11,7 +11,7 @@
 
 void help(char **av)
 {
-    cout << "Please supply Camera #\n";
+    cout << "Please supply Camera # or video filename\n" ;
 }
 
 
