@@ -57,8 +57,8 @@ int main(int argc, const char** argv)
     namedWindow("foreground image", CV_WINDOW_NORMAL);
     namedWindow("mean background image", CV_WINDOW_NORMAL);
 
-    BackgroundSubtractorMOG2 bg_model(500, 100.0,true);
-    
+    BackgroundSubtractorMOG bg_model(100,25,0.5,10);
+    //bg_model.set("noiseSigma", 10);
     
 /*    SimpleBlobDetector::Params blobParams;
     blobParams.minDistBetweenBlobs = 10.0f;

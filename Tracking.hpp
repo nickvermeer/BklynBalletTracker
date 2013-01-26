@@ -15,5 +15,5 @@
 
 using namespace std;
 using namespace cv;
-#define DESIRED_FTRS 800
+#define DESIRED_FTRS 500
 #endif

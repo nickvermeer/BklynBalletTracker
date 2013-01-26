@@ -1,6 +1,6 @@
 /*
-* video_homography.cpp
-*
+* Keypoint_Tracker
+*  heavily hacked from video_homography
 *  Created on: Oct 18, 2010
 *      Author: erublee
 */
@@ -24,13 +24,9 @@ int main(int ac, char ** av)
         return 1;
     }
 
-
-    
-    
-    
     //Camera frames and related vars    
     VideoCapture capture;
-    Mat rawframe,frame;
+    Mat rawframe,undistort_frame, frame;
     Mat gray,prev_gray;
     Mat camera_matrix,distortion_coefficients,optimal_matrix;   
 
@@ -50,7 +46,7 @@ int main(int ac, char ** av)
 
     //Subpixel refinement controls
     TermCriteria termcrit(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS,20,0.03);
-    Size subPixWinSize(10,10), winSize(31,31);
+    Size subPixWinSize(10,10), winSize(10,10);
       
     //Points for optical flow
     vector<Point2f> detected_pts;
@@ -59,10 +55,13 @@ int main(int ac, char ** av)
 
 
     //Setup Camera
-    capture.open(atoi(av[1]));
-    //capture.open(av[1]);
-    capture.set(CV_CAP_PROP_FRAME_WIDTH,640);
-    capture.set(CV_CAP_PROP_FRAME_HEIGHT,480);
+    if(atoi(av[1])+'0'==av[1][0]){
+        capture.open(atoi(av[1]));
+        capture.set(CV_CAP_PROP_FRAME_WIDTH,800);
+        capture.set(CV_CAP_PROP_FRAME_HEIGHT,600);
+    }else{
+        capture.open(av[1]);
+    }
     if (!capture.isOpened())
     {
         help(av);
@@ -70,14 +69,12 @@ int main(int ac, char ** av)
         return 1;
     }
     //read camera Properties
-    FileStorage cam_storage("logi2_9000.yml",FileStorage::READ);
-    
+    FileStorage cam_storage("cam1.yml",FileStorage::READ);
     FileNode fn = cam_storage["camera_matrix"];
     camera_matrix = Mat((CvMat*)fn.readObj(),true);
- 
     fn = cam_storage["distortion_coefficients"];
     distortion_coefficients = Mat((CvMat*)fn.readObj(),true);
-    optimal_matrix=getOptimalNewCameraMatrix(camera_matrix,distortion_coefficients,Size(640,480),0);
+    optimal_matrix=getOptimalNewCameraMatrix(camera_matrix,distortion_coefficients,Size(800,600),0);
     
     bool ref_live = true;
     for (;;)
@@ -85,11 +82,23 @@ int main(int ac, char ** av)
         capture >> rawframe;
         if (rawframe.empty())
             break;
-        undistort(rawframe,frame,camera_matrix,distortion_coefficients,optimal_matrix);
+        /*Uncomment the following two lines to undistort the frame and reduce the size by half*/
+        //undistort(rawframe,undistort_frame,camera_matrix,distortion_coefficients,optimal_matrix);
+        //resize(undistort_frame,frame,Size(),0.5,0.5,INTER_AREA);
+        
+        /*Uncomment the following line to use the raw captured frame*/
+        //rawframe.copyTo(frame);
+        
+        /*Uncomment this line to ignore distortion, but reduce the size*/
+        resize(rawframe,frame,Size(),0.75,0.75,INTER_AREA);
+        
         cvtColor(frame, gray, CV_BGR2GRAY);
         
         detector.detect(gray, curr_kpts); //Find interest points
-        if (curr_kpts.size() > 2){
+        /*If there are enough detected points, process the points for tracking
+        */
+        if (curr_kpts.size() > 2){        
+            /*refine keypoint locations using cornersubpix*/
             keypoints2points(curr_kpts, detected_pts);
             cornerSubPix(gray, detected_pts, subPixWinSize, Size(-1,-1), termcrit);
             points2keypoints(detected_pts,curr_kpts);
@@ -97,7 +106,7 @@ int main(int ac, char ** av)
             
             if (!prev_kpts.empty())
             {
-
+                /*track descriptors from the previous frame*/
                             
                 desc_matcher.knnMatch(curr_desc, prev_desc, matches_vect1, 2);
                 ratioTest(matches_vect1,0.65f);
@@ -111,21 +120,26 @@ int main(int ac, char ** av)
             }
             
             if(!prev_pts.empty()){
+                /*Use optical flow to track points from previous frame.
+                **Then use those points, and track back to the previous frame again.
+                **Finally, keep only the points that match well in both directions.
+                */ 
                 vector<uchar> status,status_backp;
                 vector<float> err,err_backp;                        
                 calcOpticalFlowPyrLK(prev_gray, gray, prev_pts, predict_pts, status, err, winSize, 3, termcrit, 0, 0.001);
                 calcOpticalFlowPyrLK(gray, prev_gray,predict_pts, back_predict, status_backp, err_backp, winSize, 3, termcrit, 0, 0.001);
                 curr_pts.clear();
                 for (size_t pt_idx=0; pt_idx < back_predict.size() ; pt_idx++){
-                    if( norm(back_predict[pt_idx] - prev_pts[pt_idx]) < 1 ){
-                        curr_pts.push_back(predict_pts[pt_idx]);
+                    if( norm(back_predict[pt_idx] - prev_pts[pt_idx]) < .5 ){
+                        if(status[pt_idx] == 1) 
+                            curr_pts.push_back(predict_pts[pt_idx]);
                     }
                 }
-                //detected_pts.clear();
+                //Add new points from the keypoint tracker
                 for (vector<Point2f>::iterator new_pt=kpt_curr_pt.begin(); new_pt != kpt_curr_pt.end(); new_pt++ ){
                     int add_point=1;
                     for (vector<Point2f>::iterator cpt=curr_pts.begin() ; cpt != curr_pts.end() ; ++cpt){
-                        if( norm( *new_pt - *cpt ) < 15 ){
+                        if( norm( *new_pt - *cpt ) < 10 ){
                             add_point=0;
                             break;
                         }
@@ -134,19 +148,15 @@ int main(int ac, char ** av)
                         curr_pts.push_back(*new_pt);
                     }
                 }
-               // for (vector<Point2f>::iterator pt=detected_pts.begin(); pt != detected_pts.end(); ++pt){
-               //     curr_pts.push_back(*pt);
-               // }
-                //Draw Points!
+               //Draw Points
                 for(size_t idx=0; idx<curr_pts.size(); idx++){
-                    cv::circle(frame, curr_pts[idx], 3, Scalar(255, 0, 225), 2);                         
+                    cv::circle(frame, curr_pts[idx], 2, Scalar(255, 0, 225), -1);                         
                 }
             }else{
                 curr_pts=detected_pts;
             }
         }
         imshow("frame", frame);
-        //imshow("gray", gray);
         
         if (ref_live)
         {
