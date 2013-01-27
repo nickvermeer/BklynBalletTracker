@@ -52,7 +52,12 @@ int main(int ac, char ** av)
     vector<Point2f> detected_pts;
     vector<Point2f> prev_pts,predict_pts,back_predict;    
     vector<Point2f> curr_pts;
-
+    
+    //Label variables
+    vector<int> prev_labels,curr_labels;
+    vector<int> new_labels;
+    vector<int> old_labels;
+    int next_label=0;	
 
     //Setup Camera
     if(atoi(av[1])+'0'==av[1][0]){
@@ -83,14 +88,14 @@ int main(int ac, char ** av)
         if (rawframe.empty())
             break;
         /*Uncomment the following two lines to undistort the frame and reduce the size by half*/
-        //undistort(rawframe,undistort_frame,camera_matrix,distortion_coefficients,optimal_matrix);
-        //resize(undistort_frame,frame,Size(),0.5,0.5,INTER_AREA);
+        undistort(rawframe,undistort_frame,camera_matrix,distortion_coefficients,optimal_matrix);
+        resize(undistort_frame,frame,Size(),0.75,0.75,INTER_AREA);
         
         /*Uncomment the following line to use the raw captured frame*/
         //rawframe.copyTo(frame);
         
         /*Uncomment this line to ignore distortion, but reduce the size*/
-        resize(rawframe,frame,Size(),0.75,0.75,INTER_AREA);
+        //resize(rawframe,frame,Size(),0.75,0.75,INTER_AREA);
         
         cvtColor(frame, gray, CV_BGR2GRAY);
         
@@ -129,10 +134,20 @@ int main(int ac, char ** av)
                 calcOpticalFlowPyrLK(prev_gray, gray, prev_pts, predict_pts, status, err, winSize, 3, termcrit, 0, 0.001);
                 calcOpticalFlowPyrLK(gray, prev_gray,predict_pts, back_predict, status_backp, err_backp, winSize, 3, termcrit, 0, 0.001);
                 curr_pts.clear();
+                curr_labels.clear();
+                new_labels.clear();
+                old_labels.clear();
+                
                 for (size_t pt_idx=0; pt_idx < back_predict.size() ; pt_idx++){
                     if( norm(back_predict[pt_idx] - prev_pts[pt_idx]) < .5 ){
-                        if(status[pt_idx] == 1) 
+                        if(status[pt_idx] == 1){
                             curr_pts.push_back(predict_pts[pt_idx]);
+                            curr_labels.push_back(prev_labels[pt_idx]);
+                        }else{
+                            old_labels.push_back(prev_labels[pt_idx]);
+                        }
+                    }else{
+                        old_labels.push_back(prev_labels[pt_idx]);
                     }
                 }
                 //Add new points from the keypoint tracker
@@ -146,14 +161,22 @@ int main(int ac, char ** av)
                     }
                     if(add_point==1){
                         curr_pts.push_back(*new_pt);
+                        curr_labels.push_back(next_label);
+                        new_labels.push_back(next_label);
+                        next_label++;                        
                     }
                 }
                //Draw Points
                 for(size_t idx=0; idx<curr_pts.size(); idx++){
-                    cv::circle(frame, curr_pts[idx], 2, Scalar(255, 0, 225), -1);                         
+                    cv::circle(frame, curr_pts[idx], 2, Scalar(((curr_labels[idx]/2)%255), (curr_labels[idx]%255), ((curr_labels[idx]/3)%255)), -1);                         
                 }
             }else{
                 curr_pts=detected_pts;
+                for(vector<Point2f>::iterator pt = curr_pts.begin(); pt != curr_pts.end(); ++pt){
+                    curr_labels.push_back(next_label);
+                    new_labels.push_back(next_label);
+                    next_label++;
+                }
             }
         }
         imshow("frame", frame);
@@ -162,6 +185,7 @@ int main(int ac, char ** av)
         {
             prev_kpts = curr_kpts;
             prev_pts=curr_pts;
+            prev_labels=curr_labels;
             gray.copyTo(prev_gray);
             curr_desc.copyTo(prev_desc);
         
