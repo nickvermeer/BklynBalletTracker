@@ -10,8 +10,7 @@
 #include <iostream>
 #include <list>
 #include <vector>
-#include <queue>
-#include <cmath>
+#include <map>
 
 using namespace std;
 using namespace cv;

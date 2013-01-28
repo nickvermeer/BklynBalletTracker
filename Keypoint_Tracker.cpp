@@ -54,10 +54,13 @@ int main(int ac, char ** av)
     vector<Point2f> curr_pts;
     
     //Label variables
-    vector<int> prev_labels,curr_labels;
-    vector<int> new_labels;
-    vector<int> old_labels;
-    int next_label=0;	
+    vector<long> prev_labels,curr_labels;
+    vector<long> new_labels;
+    vector<long> old_labels;
+    vector<long> active_labels;
+    map<long,Point2f> labels_orig;
+    map<long,double> labels_maxmove;
+    long next_label=0;	
 
     //Setup Camera
     if(atoi(av[1])+'0'==av[1][0]){
@@ -143,6 +146,9 @@ int main(int ac, char ** av)
                         if(status[pt_idx] == 1){
                             curr_pts.push_back(predict_pts[pt_idx]);
                             curr_labels.push_back(prev_labels[pt_idx]);
+                            double distance=norm(predict_pts[pt_idx]-labels_orig[prev_labels[pt_idx]]);
+                            if (distance > labels_maxmove[prev_labels[pt_idx]])
+                                labels_maxmove[prev_labels[pt_idx]]=distance;
                         }else{
                             old_labels.push_back(prev_labels[pt_idx]);
                         }
@@ -163,24 +169,34 @@ int main(int ac, char ** av)
                         curr_pts.push_back(*new_pt);
                         curr_labels.push_back(next_label);
                         new_labels.push_back(next_label);
+                        labels_orig[next_label]=*new_pt;
+                        labels_maxmove[next_label]=0.0;
                         next_label++;                        
                     }
                 }
                //Draw Points
                 for(size_t idx=0; idx<curr_pts.size(); idx++){
-                    cv::circle(frame, curr_pts[idx], 3, Scalar(((curr_labels[idx]/2)%255), (curr_labels[idx]%255), ((curr_labels[idx]/3)%255)), -1);                         
+                    if(labels_maxmove[curr_labels[idx]] > 5)
+                        cv::circle(frame, curr_pts[idx], 3, Scalar(((curr_labels[idx]/2)%255), (curr_labels[idx]%255), ((curr_labels[idx]/3)%255)), -1);                         
                 }
             }else{
                 curr_pts=detected_pts;
                 for(vector<Point2f>::iterator pt = curr_pts.begin(); pt != curr_pts.end(); ++pt){
                     curr_labels.push_back(next_label);
                     new_labels.push_back(next_label);
+                    labels_orig[next_label]=*pt;
+                    labels_maxmove[next_label]=0.0;
                     next_label++;
                 }
             }
         }
         imshow("frame", frame);
-        
+
+        for(vector<long>::iterator label = old_labels.begin();  label != old_labels.end(); ++label){
+            labels_orig.erase(labels_orig.find(*label));
+            labels_maxmove.erase(labels_maxmove.find(*label));
+        }
+                
         if (ref_live)
         {
             prev_kpts = curr_kpts;
