@@ -7,6 +7,7 @@
 
 #include "Tracking.hpp"
 #include "Keypoints.hpp"
+#include "TuioSVR.hpp"
 #define PI 3.14159265
 
 void help(char **av)
@@ -23,7 +24,11 @@ int main(int ac, char ** av)
         help(av);
         return 1;
     }
-
+    //Tuio Parameters
+    TuioServer *tuioServer;
+    map<long,TuioCursor*> ActiveCursors;
+    TuioTime currentTime;
+                            
     //Camera frames and related vars    
     VideoCapture capture;
     Mat rawframe,undistort_frame, frame;
@@ -85,8 +90,12 @@ int main(int ac, char ** av)
     optimal_matrix=getOptimalNewCameraMatrix(camera_matrix,distortion_coefficients,Size(800,600),0);
     
     bool ref_live = true;
+
+    tuioServer = new TuioServer();
+
     for (;;)
     {
+                                        
         capture >> rawframe;
         if (rawframe.empty())
             break;
@@ -141,21 +150,28 @@ int main(int ac, char ** av)
                 new_labels.clear();
                 old_labels.clear();
                 
+                currentTime = TuioTime::getSessionTime();
+                tuioServer->initFrame(currentTime);
                 for (size_t pt_idx=0; pt_idx < back_predict.size() ; pt_idx++){
                     if( norm(back_predict[pt_idx] - prev_pts[pt_idx]) < .5 ){
                         if(status[pt_idx] == 1){
                             curr_pts.push_back(predict_pts[pt_idx]);
                             curr_labels.push_back(prev_labels[pt_idx]);
                             double distance=norm(predict_pts[pt_idx]-labels_orig[prev_labels[pt_idx]]);
-                            if (distance > labels_maxmove[prev_labels[pt_idx]])
+                            if (distance > labels_maxmove[prev_labels[pt_idx]]){
+                                if(labels_maxmove[prev_labels[pt_idx]] < 5.0 && distance >= 5.0)
+                                    ActiveCursors[prev_labels[pt_idx]]=tuioServer->addTuioCursor((float)predict_pts[pt_idx].x/800.0,(float)predict_pts[pt_idx].y/600.0);    
                                 labels_maxmove[prev_labels[pt_idx]]=distance;
+                            }
                         }else{
                             old_labels.push_back(prev_labels[pt_idx]);
                         }
                     }else{
                         old_labels.push_back(prev_labels[pt_idx]);
+
                     }
                 }
+                tuioServer->commitFrame();
                 //Add new points from the keypoint tracker
                 for (vector<Point2f>::iterator new_pt=kpt_curr_pt.begin(); new_pt != kpt_curr_pt.end(); new_pt++ ){
                     int add_point=1;
@@ -171,14 +187,27 @@ int main(int ac, char ** av)
                         new_labels.push_back(next_label);
                         labels_orig[next_label]=*new_pt;
                         labels_maxmove[next_label]=0.0;
+                        
                         next_label++;                        
                     }
                 }
                //Draw Points
+                int points_sent=0;
+                currentTime = TuioTime::getSessionTime();
+                tuioServer->initFrame(currentTime);
                 for(size_t idx=0; idx<curr_pts.size(); idx++){
-                    if(labels_maxmove[curr_labels[idx]] > 5)
+                    if(labels_maxmove[curr_labels[idx]] >= 5.0)
                         cv::circle(frame, curr_pts[idx], 3, Scalar(((curr_labels[idx]/2)%255), (curr_labels[idx]%255), ((curr_labels[idx]/3)%255)), -1);                         
+                        tuioServer->updateTuioCursor(ActiveCursors[curr_labels[idx]],(float)curr_pts[idx].x/800.0,(float)curr_pts[idx].y/600.0);
+                        points_sent++;
+                        if (points_sent % 48 == 0){
+                            tuioServer->commitFrame();
+                            currentTime = TuioTime::getSessionTime();
+                            tuioServer->initFrame(currentTime);
+                        }
                 }
+                tuioServer->commitFrame();
+
             }else{
                 curr_pts=detected_pts;
                 for(vector<Point2f>::iterator pt = curr_pts.begin(); pt != curr_pts.end(); ++pt){
@@ -188,15 +217,25 @@ int main(int ac, char ** av)
                     labels_maxmove[next_label]=0.0;
                     next_label++;
                 }
+                
             }
         }
-        imshow("frame", frame);
-        cout << labels_orig.size() << endl;
         
+                        
+        imshow("frame", frame);
+        currentTime = TuioTime::getSessionTime();
+        tuioServer->initFrame(currentTime);
         for(vector<long>::iterator label = old_labels.begin();  label != old_labels.end(); ++label){
             labels_orig.erase(*label);
+            if(labels_maxmove[*label] >= 5.0){
+                tuioServer->removeTuioCursor((ActiveCursors.find(*label))->second);
+                ActiveCursors.erase(*label);
+            }
             labels_maxmove.erase(*label);
+
         }
+        tuioServer->stopUntouchedMovingCursors();
+        tuioServer->commitFrame();
                 
         if (ref_live)
         {

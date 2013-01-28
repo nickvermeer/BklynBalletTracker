@@ -1,6 +1,8 @@
 SHELL=/bin/sh
-CPPFLAGS=`pkg-config --cflags opencv`
-CPPLINKERFLAGS=`pkg-config --cflags --libs opencv`
+INCLUDES = -I ../../TUIO_CPP/TUIO -I ../../TUIO_CPP/oscpack
+CPPFLAGS=`pkg-config --cflags opencv` $(INCLUDES)
+CPPLINKERFLAGS=`pkg-config --cflags --libs opencv` /usr/local/lib/libTUIO.so
+
 #objects_bgfg=bgfg_segm.o 
 objects_dancer=dancer_segm.o 
 objects_dualvideo=dualvideo.o 
