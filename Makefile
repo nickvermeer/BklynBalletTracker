@@ -5,8 +5,9 @@ CPPLINKERFLAGS=`pkg-config --cflags --libs opencv`
 objects_dancer=dancer_segm.o 
 objects_dualvideo=dualvideo.o 
 objects_keypoint=Keypoints.o Keypoint_Tracker.o
-objects=$(objects_dancer) $(objects_keypoint) $(objects_dualvideo)
-all : dancer_segm Keypoint_Tracker dualvideo
+objects_dualstitch=Keypoints.o dualstitch.o
+objects=$(objects_dancer) $(objects_keypoint) $(objects_dualvideo) dualstitch.o
+all : dancer_segm Keypoint_Tracker dualvideo dualstitch
 
 #bgfg_segm:$(objects_bgfg)
 #	g++ $(objects_bgfg) $(CPPLINKERFLAGS)  -o bgfg_segm
@@ -20,10 +21,13 @@ dualvideo:$(objects_dualvideo)
 Keypoint_Tracker:$(objects_keypoint)
 	g++ $(objects_keypoint) $(CPPLINKERFLAGS)  -o Keypoint_Tracker
 
+dualstitch:$(objects_dualstitch)
+	g++ $(objects_dualstitch) $(CPPLINKERFLAGS)  -o dualstitch
+
 
 
 .PHONY : clean
 
 clean :
-	rm dancer_segm Keypoint_Tracker dualvideo $(objects) 
+	rm dancer_segm Keypoint_Tracker dualvideo dualstitch $(objects) 
                   
