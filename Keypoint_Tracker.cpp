@@ -191,10 +191,11 @@ int main(int ac, char ** av)
             }
         }
         imshow("frame", frame);
-
+        cout << labels_orig.size() << endl;
+        
         for(vector<long>::iterator label = old_labels.begin();  label != old_labels.end(); ++label){
-            labels_orig.erase(labels_orig.find(*label));
-            labels_maxmove.erase(labels_maxmove.find(*label));
+            labels_orig.erase(*label);
+            labels_maxmove.erase(*label);
         }
                 
         if (ref_live)
