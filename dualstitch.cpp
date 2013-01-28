@@ -20,8 +20,8 @@ int process(VideoCapture capture1, VideoCapture capture2)
 
 
   //Keypoint detector, descriptor and matcher(s)
-  GridAdaptedFeatureDetector detector(new FastFeatureDetector(),DESIRED_FTRS,3,3);
-  BriefDescriptorExtractor descExtract;
+  GridAdaptedFeatureDetector detector(new OrbFeatureDetector(),DESIRED_FTRS,3,3);
+  OrbDescriptorExtractor descExtract;
   BFMatcher desc_matcher(NORM_HAMMING,false);
     
   vector<vector<DMatch> >matches_vect1; //Matches frames 1->2
@@ -80,14 +80,14 @@ int process(VideoCapture capture1, VideoCapture capture2)
         break;
         
     /*Uncomment the following two lines to undistort the frame and reduce the size by half*/
-    //undistort(rawframe1,undistort1,camera1_matrix,distortion_coefficients1,optimal_matrix1);
-    //resize(undistort1,frame1,Size(),0.75,0.75,INTER_AREA);
-    //undistort(rawframe2,undistort2,camera2_matrix,distortion_coefficients2,optimal_matrix2);
-    //resize(undistort2,frame2,Size(),0.75,0.75,INTER_AREA);
+    undistort(rawframe1,undistort1,camera1_matrix,distortion_coefficients1,optimal_matrix1);
+    resize(undistort1,frame1,Size(),0.75,0.75,INTER_AREA);
+    undistort(rawframe2,undistort2,camera2_matrix,distortion_coefficients2,optimal_matrix2);
+    resize(undistort2,frame2,Size(),0.75,0.75,INTER_AREA);
 
     /*Uncomment the following line to use the raw captured frame*/
-    rawframe1.copyTo(frame1);
-    rawframe2.copyTo(frame2);
+    //rawframe1.copyTo(frame1);
+    //rawframe2.copyTo(frame2);
 
     /*Uncomment this line to ignore distortion, but reduce the size*/
     //resize(rawframe1,frame1,Size(),0.75,0.75,INTER_AREA);
@@ -104,13 +104,13 @@ int process(VideoCapture capture1, VideoCapture capture2)
             keypoints2points(cam1_kpts, detected_pts);
             cornerSubPix(gray1, detected_pts, subPixWinSize, Size(-1,-1), termcrit);
             points2keypoints(detected_pts,cam1_kpts);
-            descExtract.compute(frame1, cam1_kpts, cam1_desc); //Compute brief descriptors at each keypoint location
+            descExtract.compute(gray1, cam1_kpts, cam1_desc); //Compute brief descriptors at each keypoint location
             
             /*refine keypoint locations cam2 using cornersubpix*/
             keypoints2points(cam2_kpts, detected_pts);
             cornerSubPix(gray2, detected_pts, subPixWinSize, Size(-1,-1), termcrit);
             points2keypoints(detected_pts,cam2_kpts);
-            descExtract.compute(frame2, cam2_kpts, cam2_desc); //Compute brief descriptors at each keypoint location
+            descExtract.compute(gray2, cam2_kpts, cam2_desc); //Compute brief descriptors at each keypoint location
     
     
             desc_matcher.knnMatch(cam1_desc, cam2_desc, matches_vect1, 2);
@@ -119,16 +119,19 @@ int process(VideoCapture capture1, VideoCapture capture2)
             ratioTest(matches_vect2,0.75f);
             symmetryTest(matches_vect1,matches_vect2,matches);
             matches2points(cam1_kpts, cam2_kpts, matches,kpt_cam1_pt,kpt_cam2_pt);
+            cout << matches.size() << endl;
             if (matches.size() > 5){
-              Mat F = findFundamentalMat(kpt_cam1_pt,kpt_cam2_pt,CV_FM_RANSAC,3,0.99,match_mask);
-              correctMatches(F,kpt_cam1_pt,kpt_cam2_pt,kpt_cam1_pt,kpt_cam2_pt);
+              //Mat F = findFundamentalMat(kpt_cam1_pt,kpt_cam2_pt,CV_FM_RANSAC,3,0.99,match_mask);
+              //correctMatches(F,kpt_cam1_pt,kpt_cam2_pt,kpt_cam1_pt,kpt_cam2_pt);
               points2keypoints(kpt_cam1_pt,cam1_kpts);
               points2keypoints(kpt_cam2_pt,cam2_kpts);
-              stereoRectifyUncalibrated(kpt_cam1_pt,kpt_cam2_pt,F,Size(1600,900),H1,H2,5);
-              //if (countNonZero(Mat(match_mask)) > 15)
-              warpPerspective(frame2,frame2,H2,Size(1600,900),INTER_LINEAR|WARP_INVERSE_MAP);
+              //stereoRectifyUncalibrated(kpt_cam1_pt,kpt_cam2_pt,F,Size(1600,900),H1,H2,5);
+              Mat H=findHomography(kpt_cam1_pt,kpt_cam2_pt,CV_RANSAC,3,match_mask);
+              if (countNonZero(Mat(match_mask)) > 15)
+                H_out=H;
               cout << "Inital Matches:" << matches.size() << " Final Matches:" << countNonZero(Mat(match_mask)) << endl;
             }
+            warpPerspective(frame2,frame2,H_out,Size(1600,900),INTER_LINEAR|WARP_INVERSE_MAP);  
             drawKeypoints(frame1, cam1_kpts, frame1, Scalar(0, 0, 255), DrawMatchesFlags::DRAW_OVER_OUTIMG);
             drawKeypoints(frame2, cam2_kpts, frame2, Scalar(0, 0, 255), DrawMatchesFlags::DRAW_OVER_OUTIMG);
             

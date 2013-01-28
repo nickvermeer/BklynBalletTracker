@@ -168,7 +168,7 @@ int main(int ac, char ** av)
                 }
                //Draw Points
                 for(size_t idx=0; idx<curr_pts.size(); idx++){
-                    cv::circle(frame, curr_pts[idx], 2, Scalar(((curr_labels[idx]/2)%255), (curr_labels[idx]%255), ((curr_labels[idx]/3)%255)), -1);                         
+                    cv::circle(frame, curr_pts[idx], 3, Scalar(((curr_labels[idx]/2)%255), (curr_labels[idx]%255), ((curr_labels[idx]/3)%255)), -1);                         
                 }
             }else{
                 curr_pts=detected_pts;

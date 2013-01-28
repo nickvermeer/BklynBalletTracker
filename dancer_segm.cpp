@@ -52,10 +52,10 @@ int main(int argc, const char** argv)
         return -1;
     }
 
-    namedWindow("image", CV_WINDOW_NORMAL);
-    namedWindow("foreground mask", CV_WINDOW_NORMAL);
-    namedWindow("foreground image", CV_WINDOW_NORMAL);
-    namedWindow("mean background image", CV_WINDOW_NORMAL);
+    namedWindow("image", CV_WINDOW_KEEPRATIO);
+    namedWindow("foreground mask", CV_WINDOW_KEEPRATIO);
+    namedWindow("foreground image", CV_WINDOW_KEEPRATIO);
+    namedWindow("outlines", CV_WINDOW_KEEPRATIO);
 
     BackgroundSubtractorMOG bg_model(100,25,0.5,10);
     //bg_model.set("noiseSigma", 10);
@@ -78,7 +78,7 @@ int main(int argc, const char** argv)
     vector<Point2d> centers;
     
 
-    Mat img, fgmask, fgmask_old, fgimg, temp;
+    Mat img, fgmask, fgmask_old, fgimg, temp, outline_img;
     
     int niters=1;
     for(;;)
@@ -96,6 +96,9 @@ int main(int argc, const char** argv)
 
         if( fgimg.empty() )
           fgimg.create(img.size(), img.type());
+
+        if( outline_img.empty() )
+          outline_img.create(img.size(), img.type());
 
         //update the model
         bg_model(img, fgmask, update_bg_model ? -1 : 0);
@@ -129,6 +132,7 @@ int main(int argc, const char** argv)
         **
         */
         fgimg = Scalar::all(0);        
+        outline_img = Scalar::all(0); 
         findContours(temp,contoursAll,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);                
         for (int contour=0;contour < contoursAll.size(); contour++){
             Moments m = moments(contoursAll[contour]);
@@ -138,23 +142,23 @@ int main(int argc, const char** argv)
             centers.push_back(Point2d(m.m10 / m.m00, m.m01 / m.m00));
             contourMoments.push_back(m);
         }
-        drawContours(fgimg,contours,-1,Scalar(255,255,255));
+        drawContours(outline_img,contours,-1,Scalar(255,255,255));
         for (int contour=0;contour < contours.size(); contour++){
-            circle(fgimg,centers[contour],2,Scalar(0,0,255),-1);
+            circle(outline_img,centers[contour],4,Scalar(0,0,255),-1);
         }
     
         
-        //img.copyTo(fgimg, fgmask);
+        img.copyTo(fgimg, fgmask);
         
-        Mat bgimg;
-        bg_model.getBackgroundImage(bgimg);
-        imshow("image", fgimg);
+        //bg_model.getBackgroundImage(bgimg);
+        imshow("image", img);
         imshow("foreground mask", fgmask);
         
         imshow("foreground image", fgimg);
+        imshow("outlines",outline_img);
         
-        if(!bgimg.empty())
-          imshow("mean background image", bgimg );
+        //if(!bgimg.empty())
+        //  imshow("mean background image", bgimg );
         
         char k = (char)waitKey(30);
         if( k == 27 ) break;
