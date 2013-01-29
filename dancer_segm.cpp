@@ -17,7 +17,7 @@ static void help()
 "Learns the background at the start and then segments.\n"
 "Learning is togged by the space key. Will read from file or camera\n"
 "Usage: \n"
-"			./bgfg_segm [--camera]=<use camera, if this key is present>, [--file_name]=<path to movie file> \n\n");
+"			./bgfg_segm (-c <camera number>|-fn <filename> \n\n");
 }
 
 const char* keys =
@@ -37,19 +37,26 @@ int main(int argc, const char** argv)
     vector<TuioCursor*> cursors;
     help();
     
-    CommandLineParser parser(argc, argv, keys);
-    bool useCamera = parser.has("camera");
-    string file = parser.get<string>("file_name");
+    //CommandLineParser parser(argc, argv, keys);
+    bool useCamera=true;
+    int camera=0;
+    string file;
+    if(argc == 3){
+        if (strcmp(argv[1],"-c") == 0){
+            camera=atoi(argv[2]);
+        }else if (strcmp(argv[1],"-fn") == 0){
+            useCamera=false;
+            file=argv[2];
+        }
+    }
     VideoCapture cap;
     bool update_bg_model = true;
     int frames=0;
     
     if( useCamera )
-        cap.open(1);
+        cap.open(camera);
     else
         cap.open(file.c_str());
-
-    parser.printMessage();
 
     if( !cap.isOpened() )
     {
@@ -84,8 +91,8 @@ int main(int argc, const char** argv)
     
 
     Mat img, fgmask, fgmask_old, fgimg, temp, outline_img;
-    //tuioServer = new TuioServer("rb-mbp.local",3333);    
-    tuioServer = new TuioServer();    
+    tuioServer = new TuioServer("rb-mbp.local",3333);    
+    //tuioServer = new TuioServer();    
     int niters=1;
     for(;;)
     {
