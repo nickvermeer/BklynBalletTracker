@@ -17,11 +17,14 @@ int process(VideoCapture capture1, VideoCapture capture2)
   char filename2[200];
   string window_name1 = "Cam1";
   string window_name2 = "Cam2";
-  cout << "press space to save a picture. q or esc to quit" << endl;
+  cout << "press space to save a picture. v to record video, q or esc to quit" << endl;
   namedWindow(window_name1, CV_WINDOW_KEEPRATIO); //resizable window;
   namedWindow(window_name2, CV_WINDOW_KEEPRATIO); //resizable window;
   Mat frame1;
   Mat frame2;
+  bool recording=false;
+  VideoWriter * recorder1;
+  VideoWriter * recorder2;
   capture1.set(CV_CAP_PROP_FRAME_WIDTH,800);
   capture1.set(CV_CAP_PROP_FRAME_HEIGHT,600);
   capture2.set(CV_CAP_PROP_FRAME_WIDTH,800);
@@ -33,6 +36,10 @@ int process(VideoCapture capture1, VideoCapture capture2)
     
     if (frame1.empty()||frame2.empty())
         break;
+    if (recording){
+      recorder1->write(frame1);
+      recorder2->write(frame2);
+    }
     imshow(window_name1, frame1);
     imshow(window_name2, frame2);
     char key = (char) waitKey(5); //delay N millis, usually long enough to display and capture input
@@ -49,6 +56,20 @@ int process(VideoCapture capture1, VideoCapture capture2)
         imwrite(filename2, frame2);
         cout << "Saved " << filename1 << " and " << filename2 << endl;
         break;
+      case 'v':
+        if (!recording){
+          sprintf(filename1, "cam1_%.3d.avi", n);
+          recorder1 = new VideoWriter(filename1,CV_FOURCC('X','V','I','D'),24.0,Size(800,600));
+          sprintf(filename2, "cam2_%.3d.avi", n++);
+          recorder2 = new VideoWriter(filename2,CV_FOURCC('X','V','I','D'),24.0,Size(800,600));
+          cout << "Capturing to " << filename1 << " and " << filename2 << endl;
+          recording=true;
+        }else{
+          delete recorder1;
+          delete recorder2;
+          cout << "Finished recording" << endl;
+          recording=false;
+        }
       default:
           break;
     }

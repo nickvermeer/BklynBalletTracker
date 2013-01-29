@@ -4,6 +4,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/features2d/features2d.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include "TuioSVR.hpp"
 #include <stdio.h>
 #include <iostream>
 
@@ -30,8 +31,12 @@ const char* keys =
 
 int main(int argc, const char** argv)
 {
+    //Tuio Parameters
+    TuioServer *tuioServer;
+    TuioTime currentTime;
+    vector<TuioCursor*> cursors;
     help();
-
+    
     CommandLineParser parser(argc, argv, keys);
     bool useCamera = parser.has("camera");
     string file = parser.get<string>("file_name");
@@ -79,7 +84,8 @@ int main(int argc, const char** argv)
     
 
     Mat img, fgmask, fgmask_old, fgimg, temp, outline_img;
-    
+    //tuioServer = new TuioServer("rb-mbp.local",3333);    
+    tuioServer = new TuioServer();    
     int niters=1;
     for(;;)
     {
@@ -134,6 +140,7 @@ int main(int argc, const char** argv)
         fgimg = Scalar::all(0);        
         outline_img = Scalar::all(0); 
         findContours(temp,contoursAll,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);                
+        
         for (int contour=0;contour < contoursAll.size(); contour++){
             Moments m = moments(contoursAll[contour]);
             if (m.m00 < 100)
@@ -143,10 +150,25 @@ int main(int argc, const char** argv)
             contourMoments.push_back(m);
         }
         drawContours(outline_img,contours,-1,Scalar(255,255,255));
+        currentTime = TuioTime::getSessionTime();
+        tuioServer->initFrame(currentTime);
+        
+        list<TuioCursor*> cursorList = tuioServer->getTuioCursors();
+        for(list<TuioCursor *>::iterator cursor=cursorList.begin();cursor != cursorList.end();++cursor){
+            tuioServer->removeTuioCursor(*cursor);
+        }
+            tuioServer->stopUntouchedMovingCursors();
+            tuioServer->commitFrame();
+
+        
+        currentTime = TuioTime::getSessionTime();
+        tuioServer->initFrame(currentTime);        
         for (int contour=0;contour < contours.size(); contour++){
             circle(outline_img,centers[contour],4,Scalar(0,0,255),-1);
+            cursors.push_back(tuioServer->addTuioCursor((float)(centers[contour].x)/800.0,(float)(centers[contour]).y/600.0));
         }
-    
+        tuioServer->commitFrame();        
+        
         
         img.copyTo(fgimg, fgmask);
         

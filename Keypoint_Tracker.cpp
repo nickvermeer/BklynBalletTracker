@@ -91,7 +91,7 @@ int main(int ac, char ** av)
     
     bool ref_live = true;
 
-    tuioServer = new TuioServer();
+    tuioServer = new TuioServer("rb-mbp.local",3333);
 
     for (;;)
     {
@@ -193,6 +193,9 @@ int main(int ac, char ** av)
                 }
                //Draw Points
                 int points_sent=0;
+                if (ref_live == false){
+                    frame=Scalar::all(0);
+                }
                 currentTime = TuioTime::getSessionTime();
                 tuioServer->initFrame(currentTime);
                 for(size_t idx=0; idx<curr_pts.size(); idx++){
@@ -237,22 +240,20 @@ int main(int ac, char ** av)
         tuioServer->stopUntouchedMovingCursors();
         tuioServer->commitFrame();
                 
-        if (ref_live)
-        {
-            prev_kpts = curr_kpts;
-            prev_pts=curr_pts;
-            prev_labels=curr_labels;
-            gray.copyTo(prev_gray);
-            curr_desc.copyTo(prev_desc);
+        prev_kpts = curr_kpts;
+        prev_pts=curr_pts;
+        prev_labels=curr_labels;
+        gray.copyTo(prev_gray);
+        curr_desc.copyTo(prev_desc);
         
-        }
+        
         char key = (char)waitKey(2);
         switch (key)
         {
         case 'l':
             ref_live = true;
             break;
-        case 't':
+        case 'n':
             ref_live = false;
             break;
         case 27:

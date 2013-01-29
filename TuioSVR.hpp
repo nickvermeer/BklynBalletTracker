@@ -3,5 +3,6 @@
 
 #include "TuioServer.h"
 #include "TuioCursor.h"
+#include <list>
 using namespace TUIO;
 #endif
