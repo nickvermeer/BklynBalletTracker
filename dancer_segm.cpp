@@ -17,7 +17,7 @@ static void help()
 "Learns the background at the start and then segments.\n"
 "Learning is togged by the space key. Will read from file or camera\n"
 "Usage: \n"
-"			./bgfg_segm (-c <camera number>|-fn <filename> \n\n");
+"			./dancer_segm (-c <camera number>|-fn <filename> \n\n");
 }
 
 const char* keys =
