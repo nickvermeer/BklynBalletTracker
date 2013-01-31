@@ -47,6 +47,46 @@ int process(VideoCapture capture1, VideoCapture capture2)
   Mat H_out = Mat::eye(3, 3, CV_64FC1);
   Mat H1 = Mat::eye(3, 3, CV_64FC1);
   Mat H2 = Mat::eye(3, 3, CV_64FC1);
+/*
+  H1.at<double>(0,0)=0.63404614;
+  H1.at<double>(0,1)=-0.77329522;
+  H1.at<double>(0,2)=463.97713253;
+  H1.at<double>(1,0)=0.77329522;
+  H1.at<double>(1,1)=0.63404614;
+  H1.at<double>(1,2)=0.00000000;
+  H1.at<double>(2,0)=0.00000000;
+  H1.at<double>(2,1)=0.00000000;
+  H1.at<double>(2,2)=1.00000000;
+  H2.at<double>(0,0)=0.75602128;
+  H2.at<double>(0,1)=0.65454704;
+  H2.at<double>(0,2)=0.00000000;
+  H2.at<double>(1,0)=-0.65454704;
+  H2.at<double>(1,1)=0.75602128;
+  H2.at<double>(1,2)=523.63763113;
+  H2.at<double>(2,0)=0.00000000;
+  H2.at<double>(2,1)=0.00000000;
+  H2.at<double>(2,2)=1.00000000;
+*/
+
+  H1.at<double>(0,0)=0.31050863;
+  H1.at<double>(0,1)=-0.28211566;
+  H1.at<double>(0,2)=698.76391944;
+  H1.at<double>(1,0)=0.48271557;
+  H1.at<double>(1,1)=0.80243315;
+  H1.at<double>(1,2)=-79.59671562;
+  H1.at<double>(2,0)=-0.00038568;
+  H1.at<double>(2,1)=0.00049709;
+  H1.at<double>(2,2)=0.70818923;
+  H2.at<double>(0,0)=0.75602128;
+  H2.at<double>(0,1)=0.65454704;
+  H2.at<double>(0,2)=0.00000000;
+  H2.at<double>(1,0)=-0.65454704;
+  H2.at<double>(1,1)=0.75602128;
+  H2.at<double>(1,2)=523.63763113;
+  H2.at<double>(2,0)=0.00000000;
+  H2.at<double>(2,1)=0.00000000;
+  H2.at<double>(2,2)=1.00000000;
+
   int n=0;
   char filename1[200];
   char filename2[200];
@@ -95,25 +135,6 @@ int process(VideoCapture capture1, VideoCapture capture2)
   //Y translation
   H1.at<double>(1,2)=249.0;    
 */
-
-  H1.at<double>(0,0)=0.21760649;
-  H1.at<double>(0,1)=-0.42936176;
-  H1.at<double>(0,2)=809.98088241;
-  H1.at<double>(1,0)=0.59922021;
-  H1.at<double>(1,1)=0.70164611;
-  H1.at<double>(1,2)=-31.94378487;
-  H1.at<double>(2,0)=-0.00037348;
-  H1.at<double>(2,1)=0.00046245;
-  H1.at<double>(2,2)=0.75107234;
-  H2.at<double>(0,0)=0.85272659;
-  H2.at<double>(0,1)=0.52235750;
-  H2.at<double>(0,2)=0.00000000;
-  H2.at<double>(1,0)=-0.52235750;
-  H2.at<double>(1,1)=0.85272659;
-  H2.at<double>(1,2)=417.88599745;
-  H2.at<double>(2,0)=0.00000000;
-  H2.at<double>(2,1)=0.00000000;
-  H2.at<double>(2,2)=1.00000000;
 
   Mask.create(Size(2000,900),CV_8UC1);
   Mask=Scalar::all(0);     

@@ -46,7 +46,7 @@ int main(int ac, char ** av)
     H2.at<double>(2,0)=0.00000000;
     H2.at<double>(2,1)=0.00000000;
     H2.at<double>(2,2)=1.00000000;
-    
+ 
     //Tuio Parameters
     TuioServer *tuioServer;
     map<long,TuioCursor*> ActiveCursors;
@@ -62,10 +62,14 @@ int main(int ac, char ** av)
 
 
     //Keypoint detector, descriptor and matcher(s)
-    GridAdaptedFeatureDetector detector(new FastFeatureDetector(),DESIRED_FTRS,3,3);
-    OrbDescriptorExtractor descExtract;
-    BFMatcher desc_matcher(NORM_HAMMING,false);
-    
+    FeatureDetector *detector;
+    DescriptorExtractor *descExtract;
+    DescriptorMatcher *desc_matcher;
+
+    detector = new GridAdaptedFeatureDetector(new FastFeatureDetector(),DESIRED_FTRS,3,3);
+    descExtract= new OrbDescriptorExtractor();
+    desc_matcher= new BFMatcher(NORM_HAMMING,false);
+                      
     vector<vector<DMatch> >matches_vect1; //Matches frames 1->2
     vector<vector<DMatch> >matches_vect2; //Matches frames 2->1
     vector<DMatch> matches;               //Matches that are symmetric 
@@ -151,11 +155,11 @@ int main(int ac, char ** av)
         
         /*Uncomment this line to ignore distortion, but reduce the size*/
         //resize(rawframe,frame,Size(),0.5,0.5,INTER_AREA);
-        frame=CorrectCamera.Warp(rawframe1,rawframe2);
+        CorrectCamera.Warp(rawframe1,rawframe2,&frame);
         resize(frame,frame,Size(),0.5,0.5,INTER_AREA);
         cvtColor(frame, gray, CV_BGR2GRAY);
         
-        detector.detect(gray, curr_kpts); //Find interest points
+        detector->detect(gray, curr_kpts); //Find interest points
         /*If there are enough detected points, process the points for tracking
         */
         if (curr_kpts.size() > 2){        
@@ -163,15 +167,15 @@ int main(int ac, char ** av)
             keypoints2points(curr_kpts, detected_pts);
             cornerSubPix(gray, detected_pts, subPixWinSize, Size(-1,-1), termcrit);
             points2keypoints(detected_pts,curr_kpts);
-            descExtract.compute(gray, curr_kpts, curr_desc); //Compute brief descriptors at each keypoint location
+            descExtract->compute(gray, curr_kpts, curr_desc); //Compute brief descriptors at each keypoint location
             
             if (!prev_kpts.empty())
             {
                 /*track descriptors from the previous frame*/
                             
-                desc_matcher.knnMatch(curr_desc, prev_desc, matches_vect1, 2);
+                desc_matcher->knnMatch(curr_desc, prev_desc, matches_vect1, 2);
                 ratioTest(matches_vect1,0.65f);
-                desc_matcher.knnMatch(prev_desc, curr_desc, matches_vect2, 2);
+                desc_matcher->knnMatch(prev_desc, curr_desc, matches_vect2, 2);
                 ratioTest(matches_vect2,0.65f);
                 symmetryTest(matches_vect1,matches_vect2,matches);
                 matches2points(prev_kpts, curr_kpts, matches,kpt_prev_pt,kpt_curr_pt);

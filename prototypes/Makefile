@@ -1,5 +1,5 @@
 SHELL=/bin/sh
-INCLUDES = -I ../../TUIO_CPP/TUIO -I ../../TUIO_CPP/oscpack
+INCLUDES = -I ../../../TUIO_CPP/TUIO -I ../../../TUIO_CPP/oscpack
 CPPFLAGS=`pkg-config --cflags opencv` $(INCLUDES)
 CPPLINKERFLAGS=`pkg-config --cflags --libs opencv` /usr/local/lib/libTUIO.so
 

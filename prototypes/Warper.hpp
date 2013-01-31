@@ -9,7 +9,7 @@ public:
   void setH1(Mat H1);
   void setH2(Mat H2);
   void prepareMask();
-  Mat Warp(Mat img1,Mat img2);
+  void Warp(Mat &img1,Mat &img2, Mat *out);
     
 private:
   Mat H1;
