@@ -7,31 +7,56 @@
 
 #include "Tracking.hpp"
 #include "Keypoints.hpp"
+#include "Warper.hpp"
 #include "TuioSVR.hpp"
 #define PI 3.14159265
 
 void help(char **av)
 {
-    cout << "Please supply Camera # or video filename\n" ;
+    cout << "Please supply two Camera #'s or video filenames\n" ;
 }
 
 
 int main(int ac, char ** av)
 {
 
-    if (ac != 2)
+    if (ac != 3)
     {
         help(av);
         return 1;
     }
+    Mat H1 = Mat::eye(3, 3, CV_64FC1);
+    Mat H2 = Mat::eye(3, 3, CV_64FC1);
+
+    H1.at<double>(0,0)=0.21760649;
+    H1.at<double>(0,1)=-0.42936176;
+    H1.at<double>(0,2)=809.98088241;
+    H1.at<double>(1,0)=0.59922021;
+    H1.at<double>(1,1)=0.70164611;
+    H1.at<double>(1,2)=-31.94378487;
+    H1.at<double>(2,0)=-0.00037348;
+    H1.at<double>(2,1)=0.00046245;
+    H1.at<double>(2,2)=0.75107234;
+    H2.at<double>(0,0)=0.85272659;
+    H2.at<double>(0,1)=0.52235750;
+    H2.at<double>(0,2)=0.00000000;
+    H2.at<double>(1,0)=-0.52235750;
+    H2.at<double>(1,1)=0.85272659;
+    H2.at<double>(1,2)=417.88599745;
+    H2.at<double>(2,0)=0.00000000;
+    H2.at<double>(2,1)=0.00000000;
+    H2.at<double>(2,2)=1.00000000;
+    
     //Tuio Parameters
     TuioServer *tuioServer;
     map<long,TuioCursor*> ActiveCursors;
     TuioTime currentTime;
                             
     //Camera frames and related vars    
-    VideoCapture capture;
-    Mat rawframe,undistort_frame, frame;
+    VideoCapture capture1;
+    VideoCapture capture2;
+    Warper CorrectCamera(Size(800,600),Size(2000,1000),H1,H2);
+    Mat rawframe1,rawframe2,undistort_frame, frame;
     Mat gray,prev_gray;
     Mat camera_matrix,distortion_coefficients,optimal_matrix;   
 
@@ -69,13 +94,26 @@ int main(int ac, char ** av)
 
     //Setup Camera
     if(atoi(av[1])+'0'==av[1][0]){
-        capture.open(atoi(av[1]));
-        capture.set(CV_CAP_PROP_FRAME_WIDTH,800);
-        capture.set(CV_CAP_PROP_FRAME_HEIGHT,600);
+        capture1.open(atoi(av[1]));
+        capture1.set(CV_CAP_PROP_FRAME_WIDTH,800);
+        capture1.set(CV_CAP_PROP_FRAME_HEIGHT,600);
     }else{
-        capture.open(av[1]);
+        capture1.open(av[1]);
     }
-    if (!capture.isOpened())
+    if (!capture1.isOpened())
+    {
+        help(av);
+        cout << "capture device " << atoi(av[1]) << " failed to open!" << endl;
+        return 1;
+    }
+    if(atoi(av[2])+'0'==av[2][0]){
+        capture2.open(atoi(av[2]));
+        capture2.set(CV_CAP_PROP_FRAME_WIDTH,800);
+        capture2.set(CV_CAP_PROP_FRAME_HEIGHT,600);
+    }else{
+        capture2.open(av[2]);
+    }
+    if (!capture2.isOpened())
     {
         help(av);
         cout << "capture device " << atoi(av[1]) << " failed to open!" << endl;
@@ -91,24 +129,30 @@ int main(int ac, char ** av)
     
     bool ref_live = true;
 
-    tuioServer = new TuioServer("rb-mbp.local",3333);
+    //tuioServer = new TuioServer("rb-mbp.local",3333);
+    tuioServer = new TuioServer();
 
     for (;;)
     {
                                         
-        capture >> rawframe;
-        if (rawframe.empty())
+        capture1 >> rawframe1;
+        if (rawframe1.empty())
             break;
+        capture2 >> rawframe2;
+        if (rawframe2.empty())
+            break;
+        
         /*Uncomment the following two lines to undistort the frame and reduce the size by half*/
-        undistort(rawframe,undistort_frame,camera_matrix,distortion_coefficients,optimal_matrix);
-        resize(undistort_frame,frame,Size(),0.75,0.75,INTER_AREA);
+        //undistort(rawframe,undistort_frame,camera_matrix,distortion_coefficients,optimal_matrix);
+        //resize(undistort_frame,frame,Size(),0.5,0.5,INTER_AREA);
         
         /*Uncomment the following line to use the raw captured frame*/
         //rawframe.copyTo(frame);
         
         /*Uncomment this line to ignore distortion, but reduce the size*/
-        //resize(rawframe,frame,Size(),0.75,0.75,INTER_AREA);
-        
+        //resize(rawframe,frame,Size(),0.5,0.5,INTER_AREA);
+        frame=CorrectCamera.Warp(rawframe1,rawframe2);
+        resize(frame,frame,Size(),0.5,0.5,INTER_AREA);
         cvtColor(frame, gray, CV_BGR2GRAY);
         
         detector.detect(gray, curr_kpts); //Find interest points
@@ -160,7 +204,7 @@ int main(int ac, char ** av)
                             double distance=norm(predict_pts[pt_idx]-labels_orig[prev_labels[pt_idx]]);
                             if (distance > labels_maxmove[prev_labels[pt_idx]]){
                                 if(labels_maxmove[prev_labels[pt_idx]] < 5.0 && distance >= 5.0)
-                                    ActiveCursors[prev_labels[pt_idx]]=tuioServer->addTuioCursor((float)predict_pts[pt_idx].x/800.0,(float)predict_pts[pt_idx].y/600.0);    
+                                    ActiveCursors[prev_labels[pt_idx]]=tuioServer->addTuioCursor((float)predict_pts[pt_idx].x/400.0,(float)predict_pts[pt_idx].y/300.0);    
                                 labels_maxmove[prev_labels[pt_idx]]=distance;
                             }
                         }else{
@@ -201,7 +245,7 @@ int main(int ac, char ** av)
                 for(size_t idx=0; idx<curr_pts.size(); idx++){
                     if(labels_maxmove[curr_labels[idx]] >= 5.0)
                         cv::circle(frame, curr_pts[idx], 3, Scalar(((curr_labels[idx]/2)%255), (curr_labels[idx]%255), ((curr_labels[idx]/3)%255)), -1);                         
-                        tuioServer->updateTuioCursor(ActiveCursors[curr_labels[idx]],(float)curr_pts[idx].x/800.0,(float)curr_pts[idx].y/600.0);
+                        tuioServer->updateTuioCursor(ActiveCursors[curr_labels[idx]],(float)curr_pts[idx].x/400.0,(float)curr_pts[idx].y/300.0);
                         points_sent++;
                         if (points_sent % 48 == 0){
                             tuioServer->commitFrame();

@@ -14,7 +14,7 @@ static void onMouse( int event, int x, int y, int, void* )
 {
     if( event != CV_EVENT_LBUTTONDOWN )
         return;
-    cout << "(" << x << "," << y << ")" << endl;
+    cout << "(" << x << "," << y << ")" << ",";
 }
 
 int process(VideoCapture capture1, VideoCapture capture2)
@@ -77,9 +77,9 @@ int process(VideoCapture capture1, VideoCapture capture2)
   distortion_coefficients2 = Mat((CvMat*)fn.readObj(),true);
   optimal_matrix2=getOptimalNewCameraMatrix(camera2_matrix,distortion_coefficients2,Size(800,600),0);
 */
-
+/*
   //Tranform Matrix
-  //Rotation Matrix by 0.22
+  //Rotation Matrix by 0.22 from the Day1 videos
   H2.at<double>(0,0)=0.9758974493306055;
   H2.at<double>(1,1)=0.9758974493306055;
   H2.at<double>(0,1)=-0.21822962308086932;
@@ -87,17 +87,38 @@ int process(VideoCapture capture1, VideoCapture capture2)
   //X Translation
   //H2.at<double>(0,2)=131.0;
   H2.at<double>(0,2)=131.0;
-  //Rotation Matrix by -0.271
+  //Rotation Matrix by -0.271 from the Day1 videos
   H1.at<double>(0,0)=0.9635036830882489;
   H1.at<double>(1,1)=0.9635036830882489;
   H1.at<double>(0,1)=0.26769507405886134;
   H1.at<double>(1,0)=-0.26769507405886134;
   //Y translation
   H1.at<double>(1,2)=249.0;    
-  Mask.create(Size(1592,800),CV_8UC1);
+*/
+
+  H1.at<double>(0,0)=0.21760649;
+  H1.at<double>(0,1)=-0.42936176;
+  H1.at<double>(0,2)=809.98088241;
+  H1.at<double>(1,0)=0.59922021;
+  H1.at<double>(1,1)=0.70164611;
+  H1.at<double>(1,2)=-31.94378487;
+  H1.at<double>(2,0)=-0.00037348;
+  H1.at<double>(2,1)=0.00046245;
+  H1.at<double>(2,2)=0.75107234;
+  H2.at<double>(0,0)=0.85272659;
+  H2.at<double>(0,1)=0.52235750;
+  H2.at<double>(0,2)=0.00000000;
+  H2.at<double>(1,0)=-0.52235750;
+  H2.at<double>(1,1)=0.85272659;
+  H2.at<double>(1,2)=417.88599745;
+  H2.at<double>(2,0)=0.00000000;
+  H2.at<double>(2,1)=0.00000000;
+  H2.at<double>(2,2)=1.00000000;
+
+  Mask.create(Size(2000,900),CV_8UC1);
   Mask=Scalar::all(0);     
   Mask(Rect(0,0,800,600))=Scalar::all(1);
-  warpPerspective(Mask,Mask,H1,Size(1592,800),INTER_LINEAR);  
+  warpPerspective(Mask,Mask,H2,Size(2000,900),INTER_LINEAR);  
   for (;;)
   {
     capture1 >> rawframe1;
@@ -184,9 +205,9 @@ int process(VideoCapture capture1, VideoCapture capture2)
     }
 
     
-    warpPerspective(frame1,frame1,H1,Size(900,800),INTER_LINEAR);  
-    warpPerspective(frame2,frame2,H2,Size(900,800),INTER_LINEAR);  
-    //frame1.copyTo(frame2,Mask);
+    warpPerspective(frame1,frame1,H1,Size(2000,900),INTER_LINEAR);  
+    warpPerspective(frame2,frame2,H2,Size(2000,900),INTER_LINEAR);  
+    frame2.copyTo(frame1,Mask);
           
     imshow(window_name1, frame1);
     imshow(window_name2, frame2);

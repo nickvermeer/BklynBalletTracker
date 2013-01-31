@@ -6,7 +6,7 @@ CPPLINKERFLAGS=`pkg-config --cflags --libs opencv` /usr/local/lib/libTUIO.so
 #objects_bgfg=bgfg_segm.o 
 objects_dancer=dancer_segm.o 
 objects_dualvideo=dualvideo.o 
-objects_keypoint=Keypoints.o Keypoint_Tracker.o
+objects_keypoint=Keypoints.o Keypoint_Tracker.o Warper.o
 objects_dualstitch=Keypoints.o dualstitch.o
 objects=$(objects_dancer) $(objects_keypoint) $(objects_dualvideo) dualstitch.o
 all : dancer_segm Keypoint_Tracker dualvideo dualstitch
