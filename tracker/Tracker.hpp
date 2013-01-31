@@ -15,6 +15,7 @@ public:
   }
   virtual void loadNewFrame(const Mat& img) = 0 ;
   virtual void getTrackedPoints(vector<long int> * labels,vector<Point2f> *pts) = 0;
+  virtual void getTrackedPoints(map<long int,Point2f> *pts) = 0;
 protected:
   long int nextLabel;
 };

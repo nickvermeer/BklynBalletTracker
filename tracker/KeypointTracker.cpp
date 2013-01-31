@@ -32,6 +32,13 @@ void KeypointTracker::getTrackedPoints(vector<long int> * labels,vector<Point2f>
   }
 }
 
+void KeypointTracker::getTrackedPoints(map<long int,Point2f> *pts){
+  pts->clear();
+  for (size_t i=0; i < curr_labels.size(); i++){
+    pts->insert(pair<long int,Point2f>(curr_labels[i],curr_pts[i]));
+  }
+}
+
 void KeypointTracker::drawTracked(Mat *img){
   //if(!curr_kpts.empty()){
   //  drawKeypoints(*img, curr_kpts, *img, Scalar(0, 0, 255), DrawMatchesFlags::DRAW_OVER_OUTIMG);
@@ -42,7 +49,12 @@ void KeypointTracker::drawTracked(Mat *img){
 }
 
 void KeypointTracker::findKeypoints(const Mat &img){
+  vector<Point2f> detected_pts;
   detector->detect(img, curr_kpts);
+//  The below only works if the img is 8bit single channel.
+//  keypoints2points(curr_kpts, &detected_pts);
+//  cornerSubPix(img, detected_pts, subPixWinSize, Size(-1,-1), termcrit);
+//  points2keypoints(detected_pts,&curr_kpts);
   descExtract->compute(img, curr_kpts, curr_desc);
 }
 
@@ -91,4 +103,24 @@ void KeypointTracker::addTrackedPoints(const vector<Point2f> &pts){
       nextLabel++;                        
     }
   }  
+}
+
+void KeypointTracker::keypoints2points(const vector<KeyPoint>& in, vector<Point2f>* out)
+{
+    out->clear();
+    out->reserve(in.size());
+    for (size_t i = 0; i < in.size(); ++i)
+    {
+        out->push_back(in[i].pt);
+    }
+}
+
+void KeypointTracker::points2keypoints(const vector<Point2f>& in, vector<KeyPoint>* out)
+{
+    out->clear();
+    out->reserve(in.size());
+    for (size_t i = 0; i < in.size(); ++i)
+    {
+        out->push_back(KeyPoint(in[i], 1));
+    }
 }

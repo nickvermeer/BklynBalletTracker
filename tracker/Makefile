@@ -3,7 +3,7 @@ SHELL=/bin/sh
 CPPFLAGS=`pkg-config --cflags opencv` $(INCLUDES)
 CPPLINKERFLAGS=`pkg-config --cflags --libs opencv` #/usr/local/lib/libTUIO.so
 
-objects_keypoint=KeypointTracker.o Warper.o starter_video.o
+objects_keypoint=KeypointTracker.o MovementFilteredTracker.o Warper.o starter_video.o
 objects=$(objects_keypoint)
 all : starter_video
 

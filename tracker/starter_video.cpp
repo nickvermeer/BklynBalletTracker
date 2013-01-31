@@ -8,7 +8,7 @@
 * easy as CV_PI right?
 */
 #include "opencv2/highgui/highgui.hpp"
-#include "KeypointTracker.hpp"
+#include "MovementFilteredTracker.hpp"
 #include "Warper.hpp"
 #include <iostream>
 #include <vector>
@@ -64,8 +64,8 @@ namespace {
         H2.at<double>(2,1)=0.00000000;
         H2.at<double>(2,2)=1.00000000;
         Warper CorrectCamera(Size(800,600),Size(2000,1000),H1,H2);
-        KeypointTracker kpt_t1;
-        KeypointTracker kpt_t2;
+        MovementFilteredTracker kpt_t1;
+        MovementFilteredTracker kpt_t2;
         capture1.set(CV_CAP_PROP_FRAME_WIDTH,800);
         capture1.set(CV_CAP_PROP_FRAME_HEIGHT,600);
         capture2.set(CV_CAP_PROP_FRAME_WIDTH,800);
@@ -77,10 +77,10 @@ namespace {
             //frame1.copyTo(frame);
             kpt_t1.loadNewFrame(frame1);
             kpt_t1.drawTracked(&frame1);
-            kpt_t2.loadNewFrame(frame2);
-            kpt_t2.drawTracked(&frame2);
+            //kpt_t2.loadNewFrame(frame2);
+            //kpt_t2.drawTracked(&frame2);
             //CorrectCamera.Warp(frame1,frame2,&frame);
-            frame2.copyTo(frame);
+            frame1.copyTo(frame);
             if (frame.empty())
                 break;
             imshow(window_name, frame);

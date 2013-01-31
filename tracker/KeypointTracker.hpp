@@ -2,9 +2,6 @@
 #define KEYPOINTTRACKER_H
 //OpenCV Headers:
 #include <opencv2/video/tracking.hpp>   
-#include <opencv2/calib3d/calib3d.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/nonfree/features2d.hpp>
 #include "Tracker.hpp"
@@ -28,6 +25,18 @@ class KeypointTracker: public TrackerInterface{
       subPixWinSize=Size(10,10);
       winSize=Size(10,10);
     }
+    
+    KeypointTracker(FeatureDetector *fd,DescriptorExtractor *de, DescriptorMatcher *dm)
+      :TrackerInterface()
+    {
+      detector = fd;
+      descExtract=de;
+      desc_matcher=dm;
+      termcrit=TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS,20,0.03);
+      subPixWinSize=Size(10,10);
+      winSize=Size(10,10);
+    }
+    
     virtual ~KeypointTracker(){
       delete detector;
       delete descExtract;
@@ -35,6 +44,7 @@ class KeypointTracker: public TrackerInterface{
     }
   void loadNewFrame(const Mat& img);
   void getTrackedPoints(vector<long int> * labels,vector<Point2f> *pts);
+  void getTrackedPoints(map<long int,Point2f> *pts);
   void drawTracked(Mat *img);
   
   private:
@@ -59,6 +69,8 @@ class KeypointTracker: public TrackerInterface{
   void trackOpticalFlow(const Mat &img);
   void findPoints();
   void addTrackedPoints(const vector<Point2f> &pts);
+  void keypoints2points(const vector<KeyPoint>& in, vector<Point2f>* out);
+  void points2keypoints(const vector<Point2f>& in, vector<KeyPoint>* out);
 };
 
 #endif
