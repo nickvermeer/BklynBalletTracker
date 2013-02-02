@@ -41,7 +41,7 @@ public:
 private:
 
   TuioServer *tuioServer;
-  map<long int,TuioCursor*> ActiveCursors;
+  map<long int,long int> ActiveCursors;
   TuioTime currentTime; 
   map<long int,Point2f> prev_labeled_pts, curr_labeled_pts;  
   vector<long int> curr_labels,prev_labels;

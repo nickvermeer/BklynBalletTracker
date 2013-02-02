@@ -16,7 +16,7 @@ class MovementFilteredTracker: public TrackerInterface{
       :TrackerInterface()
     {
       tracker = new KeypointTracker();
-      initalThreshold=5;
+      initalThreshold=10;
       staleMoveThreshold=5;
       staleFrameThreshold=15;
     }

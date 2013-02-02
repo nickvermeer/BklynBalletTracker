@@ -77,6 +77,8 @@ namespace {
                                         
         for (;;) {
             capture1 >> frame1;
+            if (frame1.empty())
+                break;
 //            capture2 >> frame2;
 //            resize(frame1,frame1,Size(),0.75,0.75);
 //            resize(frame2,frame2,Size(),0.75,0.75);
@@ -88,8 +90,7 @@ namespace {
             kpt_t1.getTrackedPoints(&pts);
             output.sendPoints(pts);
             frame1.copyTo(frame);
-            if (frame.empty())
-                break;
+
             imshow(window_name, frame);
             char key = (char)waitKey(5); //delay N millis, usually long enough to display and capture input
             switch (key) {

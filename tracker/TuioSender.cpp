@@ -1,4 +1,6 @@
 #include "TuioSender.hpp"
+//debug
+#include <iostream>
 
 void TuioSender::sendPoints(const vector<long int> & labels,const vector<Point2f> &pts){
 
@@ -51,44 +53,45 @@ void TuioSender::commitPoints(){
   tuioServer->initFrame(currentTime);
   
   for (it=new_labels.begin();it!=new_labels.end();++it){
-    ActiveCursors[*it]=tuioServer->addTuioCursor((float)curr_labeled_pts[*it].x/tracked_size.width,(float)curr_labeled_pts[*it].y/tracked_size.height);
+    long int s_id;
+    TuioCursor* tcur;
+    tcur=tuioServer->addTuioCursor((float)curr_labeled_pts[*it].x/tracked_size.width,(float)curr_labeled_pts[*it].y/tracked_size.height);
+    s_id=tcur->getSessionID();
+    ActiveCursors[*it]=s_id;
     sentPoints++;
-    if ((sentPoints % 50)==0)
+    if ((sentPoints % 25)==0){
       tuioServer->commitFrame();
+      currentTime = TuioTime::getSessionTime();
+      tuioServer->initFrame(currentTime);
+    }
   }
 
   for (it=updated_labels.begin();it!=updated_labels.end();++it){    
-    tuioServer->updateTuioCursor(ActiveCursors[*it],(float)curr_labeled_pts[*it].x/tracked_size.width,(float)curr_labeled_pts[*it].y/tracked_size.height);
+    long int s_id=ActiveCursors[*it];
+    TuioCursor* tcur=tuioServer->getTuioCursor(s_id);
+    tuioServer->updateTuioCursor(tcur,(float)curr_labeled_pts[*it].x/tracked_size.width,(float)curr_labeled_pts[*it].y/tracked_size.height);
     sentPoints++;
-    if ((sentPoints % 50)==0)
+    if ((sentPoints % 25)==0){
       tuioServer->commitFrame();
+      currentTime = TuioTime::getSessionTime();
+      tuioServer->initFrame(currentTime);
+    }
   }
   
   for (it=deleted_labels.begin();it!=deleted_labels.end();++it){    
-    tuioServer->removeTuioCursor((ActiveCursors.find(*it))->second);
+    long int s_id=ActiveCursors[*it];
+    TuioCursor* tcur=tuioServer->getTuioCursor(s_id);
+    if (tcur != NULL)
+      tuioServer->removeTuioCursor(tcur);
     ActiveCursors.erase(*it);
     sentPoints++;
-    if ((sentPoints % 50)==0)
+
+    if ((sentPoints % 25)==0){
       tuioServer->commitFrame();
+      currentTime = TuioTime::getSessionTime();
+      tuioServer->initFrame(currentTime);
+    }
   }
   tuioServer->stopUntouchedMovingCursors();
   tuioServer->commitFrame();
-           
-                                           
-   
 }
-/*
-  void sendPoints(vector<long int> * labels,vector<Point2f> *pts);
-  void sendPoints(map<long int,Point2f> *pts);
-
-protected:
-  TuioServer *tuioServer;
-  map<long int,TuioCursor*> ActiveCursors;
-  TuioTime currentTime; 
-  map<long int,Point2f> prev_labeled_pts,curr_labeled_pts;  
-
-  
-
-
-};
-*/
