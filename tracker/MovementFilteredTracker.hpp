@@ -6,7 +6,6 @@
 //STL Headers:
 #include <vector>
 #include <map>
-#include <iostream>
 
 using namespace std;
 using namespace cv;

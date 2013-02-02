@@ -10,8 +10,8 @@ void MovementFilteredTracker::loadNewFrame(const Mat& img){
   curr_labeled_pts.clear();
   
   for (map<long int, Point2f>::iterator tracked=tkr_labeled_pts.begin();tracked!=tkr_labeled_pts.end();++tracked){
-    long int label=tracked->first;
-    Point2f pt=tracked->second;
+    const long int label=tracked->first;
+    const Point2f pt=tracked->second;
     
     if(inital_pos.count(label) == 0){
       inital_pos[label]=pt;      
@@ -61,13 +61,10 @@ void MovementFilteredTracker::getTrackedPoints(map<long int,Point2f> *pts){
 }
 
 void MovementFilteredTracker::drawTracked(Mat *img){
-  //if(!curr_kpts.empty()){
-  //  drawKeypoints(*img, curr_kpts, *img, Scalar(0, 0, 255), DrawMatchesFlags::DRAW_OVER_OUTIMG);
-  //}
-  
+
   for (map<long int, Point2f>::iterator tracked=curr_labeled_pts.begin();tracked!=curr_labeled_pts.end();++tracked){
-    long int label=tracked->first;
-    Point2f pt=tracked->second;
+    const long int label=tracked->first;
+    const Point2f pt=tracked->second;
     circle(*img, pt, 3, Scalar(((label/2)%255), (label%255), ((label/3)%255)), -1);
   }
 }

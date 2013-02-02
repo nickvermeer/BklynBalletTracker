@@ -1,9 +1,9 @@
 SHELL=/bin/sh
-#INCLUDES = -I ../../../TUIO_CPP/TUIO -I ../../../TUIO_CPP/oscpack
+INCLUDES = -I ../../../TUIO_CPP/TUIO -I ../../../TUIO_CPP/oscpack
 CPPFLAGS=`pkg-config --cflags opencv` $(INCLUDES)
-CPPLINKERFLAGS=`pkg-config --cflags --libs opencv` #/usr/local/lib/libTUIO.so
+CPPLINKERFLAGS=`pkg-config --cflags --libs opencv` /usr/local/lib/libTUIO.so
 
-objects_keypoint=KeypointTracker.o MovementFilteredTracker.o Warper.o starter_video.o
+objects_keypoint=KeypointTracker.o MovementFilteredTracker.o TuioSender.o Warper.o starter_video.o
 objects=$(objects_keypoint)
 all : starter_video
 

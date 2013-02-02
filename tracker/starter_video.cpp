@@ -9,7 +9,9 @@
 */
 #include "opencv2/highgui/highgui.hpp"
 #include "MovementFilteredTracker.hpp"
+#include "TuioSender.hpp"
 #include "Warper.hpp"
+
 #include <iostream>
 #include <vector>
 #include <stdio.h>
@@ -33,7 +35,7 @@ namespace {
             << endl;
     }
 
-    int process(VideoCapture& capture1,VideoCapture& capture2) {
+    int process(VideoCapture& capture1){//,VideoCapture& capture2) {
         int n = 0;
         char filename[200];
         string window_name = "video | q or esc to quit";
@@ -44,7 +46,9 @@ namespace {
         Mat frame;
         Mat H1 = Mat::eye(3, 3, CV_64FC1);
         Mat H2 = Mat::eye(3, 3, CV_64FC1);
-
+        TuioSender output;
+        output.setSize(Size(800,600));
+        map<long int,Point2f> pts;
         H1.at<double>(0,0)=0.21760649;
         H1.at<double>(0,1)=-0.42936176;
         H1.at<double>(0,2)=809.98088241;
@@ -68,18 +72,21 @@ namespace {
         MovementFilteredTracker kpt_t2;
         capture1.set(CV_CAP_PROP_FRAME_WIDTH,800);
         capture1.set(CV_CAP_PROP_FRAME_HEIGHT,600);
-        capture2.set(CV_CAP_PROP_FRAME_WIDTH,800);
-        capture2.set(CV_CAP_PROP_FRAME_HEIGHT,600);
+//        capture2.set(CV_CAP_PROP_FRAME_WIDTH,800);
+//        capture2.set(CV_CAP_PROP_FRAME_HEIGHT,600);
                                         
         for (;;) {
             capture1 >> frame1;
-            capture2 >> frame2;
-            //frame1.copyTo(frame);
+//            capture2 >> frame2;
+//            resize(frame1,frame1,Size(),0.75,0.75);
+//            resize(frame2,frame2,Size(),0.75,0.75);
+
             kpt_t1.loadNewFrame(frame1);
             kpt_t1.drawTracked(&frame1);
-            //kpt_t2.loadNewFrame(frame2);
-            //kpt_t2.drawTracked(&frame2);
-            //CorrectCamera.Warp(frame1,frame2,&frame);
+//            kpt_t2.loadNewFrame(frame2);
+//            kpt_t2.drawTracked(&frame2);
+            kpt_t1.getTrackedPoints(&pts);
+            output.sendPoints(pts);
             frame1.copyTo(frame);
             if (frame.empty())
                 break;
@@ -106,7 +113,7 @@ namespace {
 
 int main(int ac, char** av) {
 
-    if (ac != 3) {
+    if (ac != 2) {
         help(av);
         return 1;
     }
@@ -119,6 +126,7 @@ int main(int ac, char** av) {
         help(av);
         return 1;
     }
+  /*
     arg = av[2];
     VideoCapture capture2(arg); //try to open string, this will attempt to open it as a video file
     if (!capture2.isOpened()) //if this fails, try to open as a video camera, through the use of an integer param
@@ -127,7 +135,7 @@ int main(int ac, char** av) {
         cerr << "Failed to open a video device or video file!\n" << endl;
         help(av);
         return 1;
-    }
+    }*/
     
-    return process(capture1,capture2);
+    return process(capture1);//,capture2);
 }
