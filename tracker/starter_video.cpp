@@ -10,8 +10,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "MovementFilteredTracker.hpp"
 #include "TuioSender.hpp"
-#include "Warper.hpp"
-
+#include "WarpPts.hpp"
 #include <iostream>
 #include <vector>
 #include <stdio.h>
@@ -35,7 +34,7 @@ namespace {
             << endl;
     }
 
-    int process(VideoCapture& capture1){//,VideoCapture& capture2) {
+    int process(VideoCapture& capture1, char * host, int port){//,VideoCapture& capture2) {
         int n = 0;
         char filename[200];
         string window_name = "video | q or esc to quit";
@@ -46,7 +45,8 @@ namespace {
         Mat frame;
         Mat H1 = Mat::eye(3, 3, CV_64FC1);
         Mat H2 = Mat::eye(3, 3, CV_64FC1);
-        TuioSender output;
+        TuioSender output(host,port);
+//        TuioSender output;
         output.setSize(Size(800,600));
         map<long int,Point2f> pts;
         H1.at<double>(0,0)=0.21760649;
@@ -67,7 +67,10 @@ namespace {
         H2.at<double>(2,0)=0.00000000;
         H2.at<double>(2,1)=0.00000000;
         H2.at<double>(2,2)=1.00000000;
-        Warper CorrectCamera(Size(800,600),Size(2000,1000),H1,H2);
+        WarpPts warped_pts_t1(Size(800,600),H1);
+        WarpPts warped_pts_t2(Size(800,600),H2);
+        //Size out_size=warped_pts_t1.getOutputSize();
+        //output.setSize(out_size);
         MovementFilteredTracker kpt_t1;
         MovementFilteredTracker kpt_t2;
         capture1.set(CV_CAP_PROP_FRAME_WIDTH,800);
@@ -114,7 +117,7 @@ namespace {
 
 int main(int ac, char** av) {
 
-    if (ac != 2) {
+    if (ac != 4) {
         help(av);
         return 1;
     }
@@ -138,5 +141,5 @@ int main(int ac, char** av) {
         return 1;
     }*/
     
-    return process(capture1);//,capture2);
+    return process(capture1,av[2],atoi(av[3]));//,capture2);
 }

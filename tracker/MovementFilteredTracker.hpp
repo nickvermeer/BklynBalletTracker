@@ -24,6 +24,9 @@ class MovementFilteredTracker: public TrackerInterface{
       :TrackerInterface()
     {
       tracker = trk;
+      initalThreshold=10;
+      staleMoveThreshold=5;
+      staleFrameThreshold=15;
     }
     virtual ~MovementFilteredTracker(){
       delete tracker;
