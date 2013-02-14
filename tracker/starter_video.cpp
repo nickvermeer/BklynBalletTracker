@@ -10,7 +10,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "MovementFilteredTracker.hpp"
 #include "TuioSender.hpp"
-#include "WarpPts.hpp"
+//#include "WarpPts.hpp"
 #include <iostream>
 #include <vector>
 #include <stdio.h>
@@ -67,8 +67,8 @@ namespace {
         H2.at<double>(2,0)=0.00000000;
         H2.at<double>(2,1)=0.00000000;
         H2.at<double>(2,2)=1.00000000;
-        WarpPts warped_pts_t1(Size(800,600),H1);
-        WarpPts warped_pts_t2(Size(800,600),H2);
+//        WarpPts warped_pts_t1(Size(800,600),H1);
+//        WarpPts warped_pts_t2(Size(800,600),H2);
         //Size out_size=warped_pts_t1.getOutputSize();
         //output.setSize(out_size);
         MovementFilteredTracker kpt_t1;

@@ -92,7 +92,8 @@ void KeypointTracker::addTrackedPoints(const vector<Point2f> &pts){
   for (vector<Point2f>::const_iterator new_pt=pts.begin(); new_pt != pts.end(); new_pt++ ){
     int add_point=1;
     for (vector<Point2f>::iterator cpt=curr_pts.begin() ; cpt != curr_pts.end() ; ++cpt){
-      if( norm( *new_pt - *cpt ) < 10 ){
+      Point2f diff = *new_pt - *cpt;
+      if( ((double)(diff.x*diff.x)+(double)(diff.y*diff.y)) < 100.0 ){
         add_point=0;
         break;
       }
