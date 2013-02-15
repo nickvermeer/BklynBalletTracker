@@ -16,11 +16,18 @@ using namespace TUIO;
 class TuioSender {
 
 public:
+  bool invert_x;
+  bool invert_y;
+
   TuioSender(){
     tuioServer = new TuioServer();  
+    invert_x=false;
+    invert_y=false;
   }
   TuioSender(char *serverAddress,int port){
     tuioServer = new TuioServer(serverAddress,port);
+    invert_x=false;
+    invert_y=false;
   }
   void setServer(char *serverAddress,int port){
     if(tuioServer!=NULL){
@@ -33,10 +40,17 @@ public:
   }
   virtual ~TuioSender(){
     delete tuioServer;
+    ActiveCursors.clear();
+    prev_labeled_pts.clear();
+    curr_labeled_pts.clear();  
+    curr_labels.clear();
+    prev_labels.clear();
   }
 
   void sendPoints(const vector<long int> & labels,const vector<Point2f> &pts);
   void sendPoints(const map<long int,Point2f> &pts);
+
+  
 
 private:
 

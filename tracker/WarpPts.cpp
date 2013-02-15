@@ -1,11 +1,32 @@
+#include "WarpPts.hpp"
+
+void WarpPts::transformLabeled(const map<long int,Point2f> &pts_in,map<long int,Point2f> *pts_out){
+  vector<long int> labels;
+  vector<Point2f> pts;
+  vector <Point2f> transformed_pts;
+  
+  for (map<long int, Point2f>::const_iterator tracked=pts_in.begin();tracked!=pts_in.end();++tracked){
+    labels.push_back(tracked->first);
+    pts.push_back(tracked->second);
+  }
+ 
+  transform(pts,&transformed_pts);
+ 
+  pts_out->clear();
+ 
+  for (size_t i=0; i < labels.size(); i++){
+    pts_out->insert(pair<long int,Point2f>(labels[i],transformed_pts[i]));
+  }  
+
+}
+
+/*
 #ifndef WARPPTS_H
 #define WARPPTS_H
 #include <opencv2/imgproc/imgproc.hpp>
 #include <vector>
-#include <map>
 
 using namespace cv;
-using namespace std;
 
 class WarpPts{
 public:
@@ -50,16 +71,12 @@ public:
   }
   
   void transform(const vector<Point2f> &pts, vector<Point2f> *out_pts){
-    if (pts.size()){
-      perspectiveTransform(pts,*out_pts,H);
-    }
+    perspectiveTransform(pts,*out_pts,H);
   }
-  
-  void transformLabeled(const map<long int,Point2f> &pts_in,map<long int,Point2f> *pts_out);
-
+    
 private:
   Mat H;
   Size in_size;
 };
 
-#endif //WARPPTS_H
+*/

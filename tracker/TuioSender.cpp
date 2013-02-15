@@ -55,7 +55,15 @@ void TuioSender::commitPoints(){
   for (it=new_labels.begin();it!=new_labels.end();++it){
     long int s_id;
     TuioCursor* tcur;
-    tcur=tuioServer->addTuioCursor((float)curr_labeled_pts[*it].x/tracked_size.width,(float)curr_labeled_pts[*it].y/tracked_size.height);
+    float pt_x=(float)curr_labeled_pts[*it].x/tracked_size.width;
+    if (invert_x){
+      pt_x=1-pt_x;
+    }
+    float pt_y=(float)curr_labeled_pts[*it].y/tracked_size.height;
+    if (invert_y){
+      pt_y=1-pt_y;
+    }
+    tcur=tuioServer->addTuioCursor(pt_x,pt_y);
     s_id=tcur->getSessionID();
     ActiveCursors[*it]=s_id;
     sentPoints++;
@@ -69,7 +77,15 @@ void TuioSender::commitPoints(){
   for (it=updated_labels.begin();it!=updated_labels.end();++it){    
     long int s_id=ActiveCursors[*it];
     TuioCursor* tcur=tuioServer->getTuioCursor(s_id);
-    tuioServer->updateTuioCursor(tcur,(float)curr_labeled_pts[*it].x/tracked_size.width,(float)curr_labeled_pts[*it].y/tracked_size.height);
+    float pt_x=(float)curr_labeled_pts[*it].x/tracked_size.width;
+    if (invert_x){
+      pt_x=1-pt_x;
+    }
+    float pt_y=(float)curr_labeled_pts[*it].y/tracked_size.height;
+    if (invert_y){
+      pt_y=1-pt_y;
+    }
+    tuioServer->updateTuioCursor(tcur,pt_x,pt_y);
     sentPoints++;
     if ((sentPoints % 25)==0){
       tuioServer->commitFrame();

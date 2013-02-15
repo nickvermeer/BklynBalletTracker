@@ -21,7 +21,7 @@ void KeypointTracker::loadNewFrame(const Mat& img){
   img.copyTo(prev_img);
 }
 
-void KeypointTracker::getTrackedPoints(vector<long int> * labels,vector<Point2f> *pts){
+void KeypointTracker::getTrackedPoints(vector<long int> *labels,vector<Point2f> *pts){
   labels->clear();
   pts->clear();
   for (vector<Point2f>::iterator cpt=curr_pts.begin() ; cpt != curr_pts.end() ; ++cpt){

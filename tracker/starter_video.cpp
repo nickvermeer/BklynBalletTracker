@@ -10,7 +10,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "MovementFilteredTracker.hpp"
 #include "TuioSender.hpp"
-//#include "WarpPts.hpp"
+#include "WarpPts.hpp"
 #include <iostream>
 #include <vector>
 #include <stdio.h>
@@ -34,21 +34,26 @@ namespace {
             << endl;
     }
 
-    int process(VideoCapture& capture1, char * host, int port){//,VideoCapture& capture2) {
+    int process(VideoCapture& capture1, VideoCapture& capture2, char * host, int port){//,VideoCapture& capture2) {
         int n = 0;
         char filename[200];
-        string window_name = "video | q or esc to quit";
+        string window_name_1 = "cam1";
+        string window_name_2 = "cam2";
+        
         cout << "press space to save a picture. q or esc to quit" << endl;
-        namedWindow(window_name, CV_WINDOW_KEEPRATIO); //resizable window;
+        namedWindow(window_name_1, CV_WINDOW_KEEPRATIO); //resizable window;
+        namedWindow(window_name_2, CV_WINDOW_KEEPRATIO); //resizable window;
         Mat frame1;
         Mat frame2;
         Mat frame;
         Mat H1 = Mat::eye(3, 3, CV_64FC1);
         Mat H2 = Mat::eye(3, 3, CV_64FC1);
-        TuioSender output(host,port);
+        TuioSender output_1(host,port);
+        TuioSender output_2(host,port);
+
 //        TuioSender output;
-        output.setSize(Size(800,600));
-        map<long int,Point2f> pts;
+//        output.setSize(Size(800,600));
+        map<long int,Point2f> pts_1,pts_2,warped_pts_1,warped_pts_2;
         H1.at<double>(0,0)=0.21760649;
         H1.at<double>(0,1)=-0.42936176;
         H1.at<double>(0,2)=809.98088241;
@@ -67,34 +72,47 @@ namespace {
         H2.at<double>(2,0)=0.00000000;
         H2.at<double>(2,1)=0.00000000;
         H2.at<double>(2,2)=1.00000000;
-//        WarpPts warped_pts_t1(Size(800,600),H1);
-//        WarpPts warped_pts_t2(Size(800,600),H2);
-        //Size out_size=warped_pts_t1.getOutputSize();
-        //output.setSize(out_size);
+        WarpPts warped_pts_t1(Size(800,600),H1);
+        WarpPts warped_pts_t2(Size(800,600),H2);
+        Size out_size=warped_pts_t1.getOutputSize();
+        output_1.setSize(out_size);
+        output_2.setSize(out_size);
+        output_1.invert_x=true;
+        output_2.invert_x=true;
+                
         MovementFilteredTracker kpt_t1;
         MovementFilteredTracker kpt_t2;
         capture1.set(CV_CAP_PROP_FRAME_WIDTH,800);
         capture1.set(CV_CAP_PROP_FRAME_HEIGHT,600);
-//        capture2.set(CV_CAP_PROP_FRAME_WIDTH,800);
-//        capture2.set(CV_CAP_PROP_FRAME_HEIGHT,600);
+        capture2.set(CV_CAP_PROP_FRAME_WIDTH,800);
+        capture2.set(CV_CAP_PROP_FRAME_HEIGHT,600);
                                         
         for (;;) {
             capture1 >> frame1;
             if (frame1.empty())
                 break;
-//            capture2 >> frame2;
+            capture2 >> frame2;
+            if (frame2.empty())
+                break;
 //            resize(frame1,frame1,Size(),0.75,0.75);
 //            resize(frame2,frame2,Size(),0.75,0.75);
 
             kpt_t1.loadNewFrame(frame1);
             kpt_t1.drawTracked(&frame1);
-//            kpt_t2.loadNewFrame(frame2);
-//            kpt_t2.drawTracked(&frame2);
-            kpt_t1.getTrackedPoints(&pts);
-            output.sendPoints(pts);
-            frame1.copyTo(frame);
+            kpt_t1.getTrackedPoints(&pts_1);
+            warped_pts_t1.transformLabeled(pts_1,&warped_pts_1);
+            output_1.sendPoints(warped_pts_1);
+            kpt_t2.loadNewFrame(frame2);
+            kpt_t2.drawTracked(&frame2);
+            kpt_t2.getTrackedPoints(&pts_2);
+            warped_pts_t2.transformLabeled(pts_2,&warped_pts_2);
+            output_2.sendPoints(warped_pts_2);
+            
+            //frame1.copyTo(frame);
 
-            imshow(window_name, frame);
+            imshow(window_name_1, frame1);
+            imshow(window_name_2, frame2);
+            
             char key = (char)waitKey(5); //delay N millis, usually long enough to display and capture input
             switch (key) {
         case 'q':
@@ -117,7 +135,7 @@ namespace {
 
 int main(int ac, char** av) {
 
-    if (ac != 4) {
+    if (ac != 5) {
         help(av);
         return 1;
     }
@@ -130,7 +148,6 @@ int main(int ac, char** av) {
         help(av);
         return 1;
     }
-  /*
     arg = av[2];
     VideoCapture capture2(arg); //try to open string, this will attempt to open it as a video file
     if (!capture2.isOpened()) //if this fails, try to open as a video camera, through the use of an integer param
@@ -139,7 +156,7 @@ int main(int ac, char** av) {
         cerr << "Failed to open a video device or video file!\n" << endl;
         help(av);
         return 1;
-    }*/
+    }
     
-    return process(capture1,av[2],atoi(av[3]));//,capture2);
+    return process(capture1,capture2,av[3],atoi(av[4]));//,capture2);
 }
