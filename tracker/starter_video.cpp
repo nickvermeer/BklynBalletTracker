@@ -86,7 +86,7 @@ namespace {
         capture1.set(CV_CAP_PROP_FRAME_HEIGHT,600);
         capture2.set(CV_CAP_PROP_FRAME_WIDTH,800);
         capture2.set(CV_CAP_PROP_FRAME_HEIGHT,600);
-                                        
+        int tmp=0;                                
         for (;;) {
             capture1 >> frame1;
             if (frame1.empty())
@@ -107,13 +107,13 @@ namespace {
             kpt_t2.getTrackedPoints(&pts_2);
             warped_pts_t2.transformLabeled(pts_2,&warped_pts_2);
             output_2.sendPoints(warped_pts_2);
-            
+            tmp++;
             //frame1.copyTo(frame);
-
-            imshow(window_name_1, frame1);
-            imshow(window_name_2, frame2);
-            
-            char key = (char)waitKey(5); //delay N millis, usually long enough to display and capture input
+            if ((tmp % 10) == 0) { 
+                imshow(window_name_1, frame1);
+                imshow(window_name_2, frame2);
+            }
+            char key = (char)waitKey(1); //delay N millis, usually long enough to display and capture input
             switch (key) {
         case 'q':
         case 'Q':
