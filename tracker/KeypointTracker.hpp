@@ -63,7 +63,8 @@ class KeypointTracker: public TrackerInterface{
   vector<long int> curr_labels,prev_labels;
   
   Mat prev_img;
-  
+  vector<Mat> prev_pyr;
+    
   void findKeypoints(const Mat &img);
   void trackOpticalFlow(const Mat &img);
   void findPoints();

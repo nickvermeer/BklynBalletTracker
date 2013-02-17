@@ -73,19 +73,26 @@ void KeypointTracker::trackOpticalFlow(const Mat &img){
   vector<uchar> status,status_backp;
   vector<float> err,err_backp;
   vector<Point2f> predict_pts,back_predict;
-  calcOpticalFlowPyrLK(prev_img, img, prev_pts, predict_pts, status, err, winSize, 3, termcrit, 0, 0.001);
-  calcOpticalFlowPyrLK(img, prev_img,predict_pts, back_predict, status_backp, err_backp, winSize, 3, termcrit, 0, 0.001);  
-  curr_pts.clear();
-  curr_labels.clear();
+  vector<Mat> img_pyr;
+  buildOpticalFlowPyramid(img,img_pyr,winSize,3,true);
+  if(!prev_pyr.empty()){
+    calcOpticalFlowPyrLK(prev_pyr, img_pyr, prev_pts, predict_pts, status, err, winSize, 3, termcrit, 0, 0.001);
+    calcOpticalFlowPyrLK(img_pyr, prev_pyr,predict_pts, back_predict, status_backp, err_backp, winSize, 3, termcrit, 0, 0.001);  
+
+
+    curr_pts.clear();
+    curr_labels.clear();
   
-  for (size_t pt_idx=0; pt_idx < back_predict.size() ; pt_idx++){
-    if( norm(back_predict[pt_idx] - prev_pts[pt_idx]) < .5 ){
-      if(status[pt_idx] == 1){
-        curr_pts.push_back(predict_pts[pt_idx]);
-        curr_labels.push_back(prev_labels[pt_idx]);
+    for (size_t pt_idx=0; pt_idx < back_predict.size() ; pt_idx++){
+      if( norm(back_predict[pt_idx] - prev_pts[pt_idx]) < .5 ){
+        if(status[pt_idx] == 1){
+          curr_pts.push_back(predict_pts[pt_idx]);
+          curr_labels.push_back(prev_labels[pt_idx]);
+        }
       }
     }
   }
+  prev_pyr=img_pyr;
 }
 
 void KeypointTracker::addTrackedPoints(const vector<Point2f> &pts){
