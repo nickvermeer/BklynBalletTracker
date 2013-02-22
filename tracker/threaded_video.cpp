@@ -14,6 +14,7 @@
 #include <iostream>
 #include <vector>
 #include <stdio.h>
+#include <pthread.h>
 
 using namespace cv;
 using namespace std;
@@ -21,7 +22,80 @@ using namespace std;
 
 
 //hide the local functions in an anon namespace
+
 namespace {
+    struct imgtrack_data{
+        Mat *frame;
+        MovementFilteredTracker *tracker;
+    };
+    void *imgtrack(void *t_args){
+        Mat *my_frame;
+        MovementFilteredTracker *my_tracker;
+        imgtrack_data *my_data;
+        my_data= (imgtrack_data *)t_args;
+        my_frame=my_data->frame;
+        my_tracker=my_data->tracker;
+        my_tracker -> loadNewFrame(*my_frame);
+        pthread_exit(NULL);
+    }
+    struct camera_t_args{
+        VideoCapture *vc1;
+        VideoCapture *vc2;
+        Mat *frame1;
+        Mat *frame2;
+        int *frame_num;
+        pthread_mutex_t *output_lock;
+    };
+    
+    void *camera_thread(void *c_args){
+        camera_t_args *cam_args;
+        Mat my_frame1;
+        Mat my_frame2;
+        VideoCapture *my_vc1;
+        VideoCapture *my_vc2;
+        int *out_fn;
+        int frame_num=0;
+        
+        cam_args=(camera_t_args*) c_args;
+        my_vc1 = cam_args->vc1;
+        my_vc2 = cam_args->vc2;
+        out_fn = cam_args->frame_num;
+        int old_state=0;
+        int old_type=0;
+                
+        //pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,&old_state);
+        //pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,&old_type);
+        
+        my_vc1->grab();
+        my_vc2->grab();        
+        sleep(1);
+        my_vc1->grab();
+        my_vc2->grab();        
+        
+        while(true){
+            my_vc1->grab();
+            my_vc2->grab();
+            my_vc1->retrieve(my_frame1);
+            my_vc2->retrieve(my_frame2);
+            if(my_frame1.empty()){
+                break;
+            }
+            if(my_frame2.empty()){
+                break;
+            }
+            
+            frame_num++;
+            
+            if(pthread_mutex_trylock(cam_args->output_lock) == 0){
+                my_frame1.copyTo(*(cam_args->frame1));
+                my_frame2.copyTo(*(cam_args->frame2));
+                *out_fn = frame_num;
+                pthread_mutex_unlock(cam_args->output_lock);
+            }
+        }
+        pthread_exit(NULL);
+        return NULL;
+    }
     void help(char** av) {
         cout << "\nThis program justs gets you started reading images from video\n"
             "Usage:\n./" << av[0] << " <video device number>\n"
@@ -45,9 +119,10 @@ namespace {
         namedWindow(window_name_2, CV_WINDOW_KEEPRATIO); //resizable window;
         Mat frame1;
         Mat frame2;
+        Mat t_frame1;
+        Mat t_frame2;
         Mat gray1;
         Mat gray2;
-        
         Mat frame;
         Mat H1 = Mat::eye(3, 3, CV_64FC1);
         Mat H2 = Mat::eye(3, 3, CV_64FC1);
@@ -85,45 +160,81 @@ namespace {
                 
         MovementFilteredTracker kpt_t1;
         MovementFilteredTracker kpt_t2;
+        imgtrack_data trk_data1;
+        imgtrack_data trk_data2;
+        trk_data1.tracker=&kpt_t1;
+        trk_data2.tracker=&kpt_t2;
+                
         capture1.set(CV_CAP_PROP_FRAME_WIDTH,800);
         capture1.set(CV_CAP_PROP_FRAME_HEIGHT,600);
         capture2.set(CV_CAP_PROP_FRAME_WIDTH,800);
         capture2.set(CV_CAP_PROP_FRAME_HEIGHT,600);
+        
+        int cam_frame_num=0,local_frame_num=0;        
+        pthread_t cam_thread;
+        pthread_mutex_t cam_lock = PTHREAD_MUTEX_INITIALIZER;
+
+
+        camera_t_args cam;
+        cam.vc1=&capture1;
+        cam.vc2=&capture2;
+        cam.frame1=&t_frame1;
+        cam.frame2=&t_frame2;
+        cam.frame_num=&cam_frame_num;
+        cam.output_lock=&cam_lock;
+        
+        pthread_create(&cam_thread,NULL,camera_thread,(void *)&cam);
+        
+        pthread_t threads[2];
+        void *status;
         int tmp=0;                                
         for (;;) {
-            capture1 >> frame1;
-            if (frame1.empty())
-                break;
-            capture2 >> frame2;
-            if (frame2.empty())
-                break;
+            pthread_mutex_lock(&cam_lock);
+            if(*(cam.frame_num) != local_frame_num){
+                t_frame1.copyTo(frame1);
+                t_frame2.copyTo(frame2);
+                //if(local_frame_num +1 != *(cam.frame_num)){
+                //    cout << local_frame_num << endl;
+                //}
+                local_frame_num = *(cam.frame_num);
+                pthread_mutex_unlock(&cam_lock);
+                
+                cvtColor(frame1, gray1, CV_BGR2GRAY);
+                cvtColor(frame2, gray2, CV_BGR2GRAY);
 //            resize(frame1,frame1,Size(),0.75,0.75);
 //            resize(frame2,frame2,Size(),0.75,0.75);
-
-            cvtColor(frame1, gray1, CV_BGR2GRAY);
-            cvtColor(frame2, gray2, CV_BGR2GRAY);
-                            
-            kpt_t1.loadNewFrame(gray1);
-            kpt_t1.drawTracked(&frame1);
-            kpt_t1.getTrackedPoints(&pts_1);
-            warped_pts_t1.transformLabeled(pts_1,&warped_pts_1);
-            output_1.sendPoints(warped_pts_1);
-            kpt_t2.loadNewFrame(gray2);
-            kpt_t2.drawTracked(&frame2);
-            kpt_t2.getTrackedPoints(&pts_2);
-            warped_pts_t2.transformLabeled(pts_2,&warped_pts_2);
-            output_2.sendPoints(warped_pts_2);
-            tmp++;
+                trk_data1.frame=&gray1;
+                trk_data2.frame=&gray2;
+                int rc[2];
+            
+                rc[0]=pthread_create(&threads[0], NULL, imgtrack, (void *)&trk_data1);
+                rc[1]=pthread_create(&threads[1], NULL, imgtrack, (void *)&trk_data2);
+                pthread_join(threads[0], &status);
+                pthread_join(threads[1], &status);
+                kpt_t1.drawTracked(&frame1);
+                kpt_t1.getTrackedPoints(&pts_1);
+                warped_pts_t1.transformLabeled(pts_1,&warped_pts_1);
+                output_1.sendPoints(warped_pts_1);
+                kpt_t2.drawTracked(&frame2);
+                kpt_t2.getTrackedPoints(&pts_2);
+                warped_pts_t2.transformLabeled(pts_2,&warped_pts_2);
+                output_2.sendPoints(warped_pts_2);
+                tmp++;
             //frame1.copyTo(frame);
             //if ((tmp % 2) == 0) { 
                 imshow(window_name_1, frame1);
                 imshow(window_name_2, frame2);
             //}
+            }else{
+                pthread_mutex_unlock(&cam_lock);
+            }
             char key = (char)waitKey(1); //delay N millis, usually long enough to display and capture input
             switch (key) {
         case 'q':
         case 'Q':
         case 27: //escape key
+            pthread_cancel(cam_thread);
+            //pthread_exit(NULL);
             return 0;
         case ' ': //Save an image
             sprintf(filename,"filename%.3d.jpg",n++);
@@ -133,8 +244,9 @@ namespace {
         default:
             break;
             }
+
         }
-        return 0;
+        return 0; 
     }
 
 }
