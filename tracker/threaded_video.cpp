@@ -193,9 +193,9 @@ namespace {
             if(*(cam.frame_num) != local_frame_num){
                 t_frame1.copyTo(frame1);
                 t_frame2.copyTo(frame2);
-                //if(local_frame_num +1 != *(cam.frame_num)){
-                //    cout << local_frame_num << endl;
-                //}
+                if(local_frame_num +1 != *(cam.frame_num)){
+                    cout << local_frame_num << endl;
+                }
                 local_frame_num = *(cam.frame_num);
                 pthread_mutex_unlock(&cam_lock);
                 

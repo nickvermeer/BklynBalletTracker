@@ -7,8 +7,12 @@ size=(800,600)
 pts=[]
 #pts.append([(5,237),(37,203),(69,175),(120,122),(183,61),(228,16)])  #cam1 day2
 #pts.append([(513,8),(546,27),(599,60),(676,109),(749,154)])  #cam2 day2
-pts.append([(201,529),(242,481),(296,412),(369,325),(439,239),(525,133)])
-pts.append([(625,500),(568,449),(482,375),(392,297),(300,218),(161,100)])
+#pts.append([(201,529),(242,481),(296,412),(369,325),(439,239),(525,133)])
+#pts.append([(625,500),(568,449),(482,375),(392,297),(300,218),(161,100)])
+pts.append([(23,86),(52,80),(111,67),(171,53),(242,35),(297,26),(345,14)])
+pts.append([(621,6),(655,16),(682,21),(708,29),(734,38),(760,43),(783,50)])
+
+
 H=[]
 
 for idx in range(0,2):
@@ -69,15 +73,17 @@ for idx in range(0,2):
 
 #perspective_pts_cam1=np.array([(264,309),(152,419),(276,671),(389,404)],np.float32)
 #perspective_pts_cam2=np.array([(799,304),(664,396),(727,675),(920,429)],np.float32)
-perspective_pts_cam1=np.array([(276,289),(152,388),(249,650),(389,397)],np.float32)
-perspective_pts_cam2=np.array([(768,282),(651,396),(760,657),(908,386)],np.float32)
+#perspective_pts_cam1=np.array([(276,289),(152,388),(249,650),(389,397)],np.float32)
+#perspective_pts_cam2=np.array([(768,282),(651,396),(760,657),(908,386)],np.float32)
+perspective_pts_cam1=np.array([(150,94),(118,388),(326,415),(275,276)],np.float32)
+perspective_pts_cam2=np.array([(664,56),(588,349),(806,424),(767,262)],np.float32)
 
-perspective_tf=cv2.getPerspectiveTransform(perspective_pts_cam2,perspective_pts_cam1)
+perspective_tf=cv2.getPerspectiveTransform(perspective_pts_cam1,perspective_pts_cam2)
 
 print
 print perspective_tf
 print
-H[1]=perspective_tf.dot(H[1])
+H[0]=perspective_tf.dot(H[0])
 print
 print
 print
