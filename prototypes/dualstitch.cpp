@@ -87,26 +87,7 @@ int process(VideoCapture capture1, VideoCapture capture2)
   distortion_coefficients2 = Mat((CvMat*)fn.readObj(),true);
   optimal_matrix2=getOptimalNewCameraMatrix(camera2_matrix,distortion_coefficients2,Size(800,600),0);
 */
-/*
-  H1.at<double>(0,0)=0.97641872;
-  H1.at<double>(0,1)=-0.21588537;
-  H1.at<double>(0,2)=129.53122059;
-  H1.at<double>(1,0)=0.21588537;
-  H1.at<double>(1,1)=0.97641872;
-  H1.at<double>(1,2)=0.00000000;
-  H1.at<double>(2,0)=0.00000000;
-  H1.at<double>(2,1)=0.00000000;
-  H1.at<double>(2,2)=1.00000000;
-  H2.at<double>(0,0)=0.96525232;
-  H2.at<double>(0,1)=0.26131965;
-  H2.at<double>(0,2)=0.00000000;
-  H2.at<double>(1,0)=-0.26131965;
-  H2.at<double>(1,1)=0.96525232;
-  H2.at<double>(1,2)=209.05571760;
-  H2.at<double>(2,0)=0.00000000;
-  H2.at<double>(2,1)=0.00000000;
-  H2.at<double>(2,2)=1.00000000;
- */
+/*Matrix from inital captures
   H1.at<double>(0,0)=0.90852748;
   H1.at<double>(0,1)=-0.53276288;
   H1.at<double>(0,2)=662.24814528;
@@ -125,7 +106,25 @@ int process(VideoCapture capture1, VideoCapture capture2)
   H2.at<double>(2,0)=0.00000000;
   H2.at<double>(2,1)=0.00000000;
   H2.at<double>(2,2)=1.00000000;
-   
+*/
+  H1.at<double>(0,0)=0.21760649;
+  H1.at<double>(0,1)=-0.42936176;
+  H1.at<double>(0,2)=809.98088241;
+  H1.at<double>(1,0)=0.59922021;
+  H1.at<double>(1,1)=0.70164611;
+  H1.at<double>(1,2)=-31.94378487;
+  H1.at<double>(2,0)=-0.00037348;
+  H1.at<double>(2,1)=0.00046245;
+  H1.at<double>(2,2)=0.75107234;
+  H2.at<double>(0,0)=0.85272659;
+  H2.at<double>(0,1)=0.52235750;
+  H2.at<double>(0,2)=0.00000000;
+  H2.at<double>(1,0)=-0.52235750;
+  H2.at<double>(1,1)=0.85272659;
+  H2.at<double>(1,2)=417.88599745;
+  H2.at<double>(2,0)=0.00000000;
+  H2.at<double>(2,1)=0.00000000;
+  H2.at<double>(2,2)=1.00000000;   
   Mask.create(Size(2000,900),CV_8UC1);
   Mask=Scalar::all(0);     
   Mask(Rect(0,0,800,600))=Scalar::all(1);
