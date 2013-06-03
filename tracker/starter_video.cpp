@@ -8,6 +8,7 @@
 * easy as CV_PI right?
 */
 #include "opencv2/highgui/highgui.hpp"
+#include "opencv2/highgui/highgui_c.h"
 #include "MovementFilteredTracker.hpp"
 #include "TuioSender.hpp"
 #include "WarpPts.hpp"
@@ -100,8 +101,8 @@ namespace {
 //            resize(frame1,frame1,Size(),0.75,0.75);
 //            resize(frame2,frame2,Size(),0.75,0.75);
 
-            cvtColor(frame1, gray1, CV_BGR2GRAY);
-            cvtColor(frame2, gray2, CV_BGR2GRAY);
+            cvtColor(frame1, gray1, COLOR_BGR2GRAY);
+            cvtColor(frame2, gray2, COLOR_BGR2GRAY);
                             
             kpt_t1.loadNewFrame(gray1);
             kpt_t1.drawTracked(&frame1);

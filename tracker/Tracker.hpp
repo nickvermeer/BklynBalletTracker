@@ -1,7 +1,9 @@
 #ifndef TRACKER_H
 #define TRACKER_H
 #include <opencv2/core/core.hpp>
+#include <opencv2/core/types_c.h>
 #include <vector>
+#include <map>
 
 using namespace cv;
 using namespace std;
