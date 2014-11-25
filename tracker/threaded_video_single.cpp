@@ -8,7 +8,7 @@
 * easy as CV_PI right?
 */
 #include "opencv2/highgui/highgui.hpp"
-#include "MovementFilteredTracker.hpp"
+#include "KeypointTracker.hpp"
 #include "TuioSender.hpp"
 #include "WarpPts.hpp"
 #include <iostream>
@@ -26,11 +26,11 @@ using namespace std;
 namespace {
     struct imgtrack_data{
         Mat *frame;
-        MovementFilteredTracker *tracker;
+        KeypointTracker *tracker;
     };
     void *imgtrack(void *t_args){
         Mat *my_frame;
-        MovementFilteredTracker *my_tracker;
+        KeypointTracker *my_tracker;
         imgtrack_data *my_data;
         my_data= (imgtrack_data *)t_args;
         my_frame=my_data->frame;
@@ -100,7 +100,7 @@ namespace {
         string window_name_1 = "cam1";
         
         cout << "press space to save a picture. q or esc to quit" << endl;
-        namedWindow(window_name_1, WINDOW_KEEPRATIO); //resizable window;
+        namedWindow(window_name_1, CV_WINDOW_KEEPRATIO); //resizable window;
         Mat frame1;
         Mat t_frame1;
         Mat gray1;
@@ -136,12 +136,12 @@ namespace {
         output_1.setSize(out_size);
         output_1.invert_x=true;
                 
-        MovementFilteredTracker kpt_t1;
+        KeypointTracker kpt_t1;
         imgtrack_data trk_data1;
         trk_data1.tracker=&kpt_t1;
                 
-        capture1.set(CAP_PROP_FRAME_WIDTH,800);
-        capture1.set(CAP_PROP_FRAME_HEIGHT,600);
+        capture1.set(CV_CAP_PROP_FRAME_WIDTH,800);
+        capture1.set(CV_CAP_PROP_FRAME_HEIGHT,600);
         
         int cam_frame_num=0,local_frame_num=0;        
         pthread_t cam_thread;
@@ -153,7 +153,7 @@ namespace {
         cam.frame1=&t_frame1;
         cam.frame_num=&cam_frame_num;
         cam.output_lock=&cam_lock;
-        kpt_t1.setThresholds(10,15,300);        
+        //kpt_t1.setThresholds(10,15,300);        
         pthread_create(&cam_thread,NULL,camera_thread,(void *)&cam);
         
         pthread_t threads[2];

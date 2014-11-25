@@ -115,8 +115,8 @@ namespace {
         string window_name_2 = "cam2";
         
         cout << "press space to save a picture. q or esc to quit" << endl;
-        namedWindow(window_name_1, WINDOW_KEEPRATIO); //resizable window;
-        namedWindow(window_name_2, WINDOW_KEEPRATIO); //resizable window;
+        namedWindow(window_name_1, CV_WINDOW_KEEPRATIO); //resizable window;
+        namedWindow(window_name_2, CV_WINDOW_KEEPRATIO); //resizable window;
         Mat frame1;
         Mat frame2;
         Mat t_frame1;
@@ -165,10 +165,10 @@ namespace {
         trk_data1.tracker=&kpt_t1;
         trk_data2.tracker=&kpt_t2;
                 
-        capture1.set(CAP_PROP_FRAME_WIDTH,800);
-        capture1.set(CAP_PROP_FRAME_HEIGHT,600);
-        capture2.set(CAP_PROP_FRAME_WIDTH,800);
-        capture2.set(CAP_PROP_FRAME_HEIGHT,600);
+        capture1.set(CV_CAP_PROP_FRAME_WIDTH,800);
+        capture1.set(CV_CAP_PROP_FRAME_HEIGHT,600);
+        capture2.set(CV_CAP_PROP_FRAME_WIDTH,800);
+        capture2.set(CV_CAP_PROP_FRAME_HEIGHT,600);
         
         int cam_frame_num=0,local_frame_num=0;        
         pthread_t cam_thread;

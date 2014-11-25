@@ -1,7 +1,7 @@
 SHELL=/bin/sh
 INCLUDES = -I ../../../TUIO_CPP/TUIO -I ../../../TUIO_CPP/oscpack
-CPPFLAGS=-O2 -Wall -Wextra -pthread `pkg-config --cflags opencv` $(INCLUDES) 
-CPPLINKERFLAGS=-O2 -Wall -Wextra -pthread `pkg-config --cflags --libs opencv` /usr/local/lib/libTUIO.so 
+CPPFLAGS=-O2 -g -Wall -Wextra -pthread `pkg-config --cflags opencv` $(INCLUDES) 
+CPPLINKERFLAGS=-O2 -g -Wall -Wextra -pthread `pkg-config --cflags --libs opencv` /usr/local/lib/libTUIO.so 
 #CPPFLAGS=-O2 -pg -Wall -Wextra `pkg-config --cflags opencv` $(INCLUDES) 
 #CPPLINKERFLAGS=-O2 -pg -Wall -Wextra `pkg-config --cflags --libs opencv` /usr/local/lib/libTUIO.so 
 

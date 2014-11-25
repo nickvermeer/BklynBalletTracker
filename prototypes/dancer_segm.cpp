@@ -119,8 +119,8 @@ int main(int argc, const char** argv)
 
         //Fill in gaps in the mask using morphology functions        
         dilate(fgmask, temp, Mat(), Point(-1,-1), niters); 
-        erode(temp, temp, Mat(), Point(-1,-1), niters*2);
-        dilate(temp, temp, Mat(), Point(-1,-1), niters);
+        //erode(temp, temp, Mat(), Point(-1,-1), niters*2);
+        //dilate(temp, temp, Mat(), Point(-1,-1), niters);
         threshold(temp,temp,200,255,CV_THRESH_BINARY);     
         temp.copyTo(fgmask);
         

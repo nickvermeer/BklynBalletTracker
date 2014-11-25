@@ -74,10 +74,10 @@ void KeypointTracker::trackOpticalFlow(const Mat &img){
   vector<float> err,err_backp;
   vector<Point2f> predict_pts,back_predict;
   vector<Mat> img_pyr;
-  buildOpticalFlowPyramid(img,img_pyr,winSize,3,true);
+  buildOpticalFlowPyramid(img,img_pyr,winSize,5,true);
   if(!prev_pyr.empty()){
-    calcOpticalFlowPyrLK(prev_pyr, img_pyr, prev_pts, predict_pts, status, err, winSize, 3, termcrit, 0, 0.001);
-    calcOpticalFlowPyrLK(img_pyr, prev_pyr,predict_pts, back_predict, status_backp, err_backp, winSize, 3, termcrit, 0, 0.001);  
+    calcOpticalFlowPyrLK(prev_pyr, img_pyr, prev_pts, predict_pts, status, err, winSize, 5, termcrit, 0, 0.001);
+    calcOpticalFlowPyrLK(img_pyr, prev_pyr,predict_pts, back_predict, status_backp, err_backp, winSize, 5, termcrit, 0, 0.001);  
 
 
     curr_pts.clear();
